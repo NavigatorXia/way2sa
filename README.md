@@ -99,8 +99,9 @@ code is `followupOwners` / `queueForEval` (L07 dwells on this).
 
 ## License
 
-The course content in this repo (READMEs, tutorials, `assets/`, `lessons/*/data.js`,
-`tools/`) is released under the [Apache License 2.0](LICENSE) — see `LICENSE`.
+Copyright 2026 Leo.X. The course content in this repo (READMEs, tutorials, `assets/`,
+`lessons/*/data.js`, `tools/`) is released under the
+[Apache License 2.0](LICENSE) — see `LICENSE`.
 
 That does not relicense the upstream prototype: `dsh-superagent-prototype/` and the
 excerpts inlined from its `docs/` stay under DeepSeek's MIT license, with the
