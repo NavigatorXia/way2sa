@@ -99,6 +99,10 @@ code is `followupOwners` / `queueForEval` (L07 dwells on this).
 
 ## License
 
-The prototype and the excerpts inlined from its `docs/` stay under DeepSeek's MIT
-license, with the copyright notice preserved as-is. No license is declared for the
-course notes themselves yet.
+The course content in this repo (READMEs, tutorials, `assets/`, `lessons/*/data.js`,
+`tools/`) is released under the [Apache License 2.0](LICENSE) — see `LICENSE`.
+
+That does not relicense the upstream prototype: `dsh-superagent-prototype/` and the
+excerpts inlined from its `docs/` stay under DeepSeek's MIT license, with the
+original copyright notice preserved as-is. Apache-2.0 and MIT are compatible in this
+direction, so reuse must carry both notices.

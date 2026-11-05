@@ -118,3 +118,8 @@ lessons/
 tools/                        build.mjs / validate.mjs / smoke.mjs / tutorials.mjs
 dsh-superagent-prototype/     原型仓库（submodule，只读参考）
 ```
+
+## 许可
+
+课程本体（两份 README、每课 `README.md` / `TUTORIAL.md`、`assets/`、`lessons/*/data.js`、`tools/`）采用 [Apache License 2.0](LICENSE)，全文见 `LICENSE`。
+`dsh-superagent-prototype/` 与内联进页面的 `docs/` 原文仍归 DeepSeek 的 MIT 许可，版权声明原样保留；Apache-2.0 与 MIT 在该方向兼容，二次分发需同时带上两份声明。
