@@ -1,0 +1,461 @@
+:root {
+  color-scheme: light;
+  --bg: #f5f7fa;
+  --panel: #ffffff;
+  --panel-soft: #f0f3f7;
+  --text: #1b2430;
+  --muted: #5c6875;
+  --hint: #8a95a2;
+  --border: #dde3ea;
+  --border-strong: #b9c4d0;
+  --accent: #1d6fd0;
+  --accent-soft: #e6f0fc;
+  --kernel: #0f7a63;
+  --kernel-soft: #e2f4ee;
+  --host: #9a5a12;
+  --host-soft: #fbf0dc;
+  --fact: #b1362f;
+  --fact-soft: #fbeae8;
+  --shadow: 0 1px 2px rgba(20, 32, 48, .05);
+  --radius: 12px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+body.dark {
+  color-scheme: dark;
+  --bg: #141920;
+  --panel: #1d242e;
+  --panel-soft: #232c38;
+  --text: #e8edf3;
+  --muted: #a5b1bf;
+  --hint: #7f8b99;
+  --border: #313d4b;
+  --border-strong: #4a5867;
+  --accent: #6fb0ff;
+  --accent-soft: #20364f;
+  --kernel: #58c9a8;
+  --kernel-soft: #173c34;
+  --host: #e2b166;
+  --host-soft: #3b2e19;
+  --fact: #f08c83;
+  --fact-soft: #3d2422;
+  --shadow: none;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.65 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1, h2, h3 { font-weight: 600; line-height: 1.35; margin: 0 0 10px; }
+h1 { font-size: 22px; }
+h2 { font-size: 16px; }
+h3 { font-size: 14px; }
+p { margin: 0 0 10px; }
+code, pre { font-family: var(--mono); }
+
+.wrap { max-width: 1360px; margin: 0 auto; padding: 0 24px 120px; }
+
+/* top bar */
+.topbar {
+  position: sticky; top: 0; z-index: 30;
+  background: var(--panel); border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.topbar-inner { max-width: 1360px; margin: 0 auto; padding: 10px 24px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.brand { font-weight: 600; font-size: 15px; white-space: nowrap; }
+.brand small { color: var(--hint); font-weight: 400; margin-left: 6px; }
+.course-nav { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--panel-soft); color: var(--muted); font-size: 12px; white-space: nowrap;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+.chip.current { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chip b { font-weight: 600; }
+/* In-page course switching uses <button>, not <a>: a sandboxed srcdoc iframe
+   cannot navigate its parent, so every switch must stay inside the document. */
+button.chip, button.map-card { font-family: var(--sans); cursor: pointer; }
+button.map-card { display: block; width: 100%; text-align: left; color: var(--text); }
+button.map-card h3 { font-size: 15px; }
+button.map-card p { font-size: 14px; }
+.chip.static { cursor: default; opacity: .72; }
+.chip.static:hover { border-color: var(--border); color: var(--muted); }
+.embed-note { margin: 12px 0 0; font-size: 11px; color: var(--hint); }
+.tb-actions { display: flex; gap: 6px; }
+.btn {
+  border: 1px solid var(--border); background: var(--panel); color: var(--text);
+  border-radius: 8px; padding: 6px 11px; font: inherit; font-size: 12px; cursor: pointer;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { color: #fff; filter: brightness(1.08); }
+.btn:disabled { opacity: .45; cursor: default; }
+
+/* hero */
+.hero { padding: 26px 0 18px; }
+.kicker { color: var(--accent); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+.hero .sub { color: var(--muted); font-size: 15px; margin: 4px 0 14px; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 16px; }
+.card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 18px; box-shadow: var(--shadow);
+}
+.card + .card { margin-top: 14px; }
+.goal { font-size: 15px; font-weight: 500; }
+.q-list { margin: 0; padding-left: 20px; color: var(--muted); }
+.q-list li { margin-bottom: 6px; }
+.meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.tag {
+  font-size: 11px; padding: 3px 8px; border-radius: 6px;
+  background: var(--panel-soft); border: 1px solid var(--border); color: var(--muted);
+}
+.tag.doc { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+/* The doc tag is a button: it opens docs/00x-*.md in the in-place popup. */
+button.tag.doc { font-family: var(--sans); cursor: pointer; }
+button.tag.doc:hover { color: #fff; background: var(--accent); }
+
+/* layout. The flow column is a FIXED track (max 800px = the diagram's 760px
+   plus the card's padding), so collapsing a sidebar can never resize 模块与流转:
+   every spare pixel goes to the right column instead, which widens rather than
+   re-scales the diagram. Under 800px it still shrinks, and the single-column
+   breakpoint below takes over at 1000px. */
+.viz-grid { display: grid; grid-template-columns: minmax(0, 800px) minmax(260px, 1fr); gap: 14px; margin-top: 16px; align-items: stretch; }
+.viz-col { display: flex; flex-direction: column; min-width: 0; }
+/* Both right-hand cards are stretched together so the column's bottom edge
+   lands exactly on the flow card's bottom edge (which is a fixed height now).
+   The spare height is split evenly: putting all of it in one card made that
+   card look broken, half of it in each just reads as list/panel room. */
+/* flex-basis auto, not 0: in the single-column layout (<=1000px) the column has
+   no definite height, and a 0 basis collapsed both cards to nothing there. */
+.viz-col > .card { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.viz-col > .card > #machine { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.viz-col > .card .sm-grid { flex: none; }
+.viz-col > .card > #step-detail { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.section-title .hint { font-size: 12px; color: var(--hint); font-weight: 400; }
+
+/* graph */
+/* The wrap is capped at a FIXED pixel width (inline style, GRAPH_MAX_W in
+   course.js), not at the viewBox width: a wider pane must not scale the
+   diagram up, or the type size would change every time a sidebar collapses.
+   Under the cap the SVG still scales down to fit the card. */
+.graph-wrap { position: relative; width: 100%; margin: 0 auto; background: var(--panel-soft); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.graph-wrap svg { display: block; width: 100%; height: auto; }
+.lane-label { font: 13px var(--sans); fill: var(--hint); letter-spacing: .02em; }
+.node-box { fill: var(--panel); stroke: var(--border-strong); stroke-width: 1; }
+.node-title { font: 500 18px var(--sans); fill: var(--text); }
+.node-sub { font: 14px var(--sans); fill: var(--muted); }
+.node.kernel .node-box { fill: var(--kernel-soft); stroke: var(--kernel); }
+.node.host .node-box { fill: var(--host-soft); stroke: var(--host); }
+.node.human .node-box { fill: var(--accent-soft); stroke: var(--accent); }
+.node.carry { opacity: .48; }
+.node.active { opacity: 1; }
+.node.active .node-box { stroke-width: 2.5; }
+.node.active .node-title { font-weight: 600; }
+.node.source .node-box { stroke-dasharray: 4 3; }
+.node.target .node-box { stroke: var(--accent); stroke-width: 2.5; }
+.node.target .node-title { fill: var(--accent); }
+.edge { fill: none; stroke: var(--border-strong); stroke-width: 1.2; opacity: .55; }
+/* A soft halo keeps a label readable where a connector runs under it. */
+.edge-label { font: 12px var(--sans); fill: var(--hint); paint-order: stroke; stroke: var(--panel-soft); stroke-width: 3px; stroke-linejoin: round; }
+.flow-path { fill: none; stroke: var(--accent); stroke-width: 2.4; opacity: 0; transition: opacity .16s; }
+.flow-path.fact { stroke: var(--fact); stroke-dasharray: 5 4; }
+.flow-path.effect { stroke: var(--kernel); }
+.flow-path.on { opacity: 1; }
+.flow-cap { font: 12px var(--mono); fill: var(--muted); opacity: 0; }
+.flow-cap.on { opacity: 1; }
+.packet {
+  position: absolute; z-index: 4; pointer-events: none; opacity: 0;
+  transform: translate(-50%, -50%);
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 9px; border-radius: 999px;
+  background: var(--accent); color: #fff; font: 500 13px var(--sans);
+  white-space: nowrap; box-shadow: 0 2px 8px rgba(20, 40, 70, .22);
+  transition: opacity .16s;
+}
+.packet.fact { background: var(--fact); }
+.packet.effect { background: var(--kernel); }
+.packet.event { background: var(--host); }
+.packet .dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; opacity: .85; }
+.graph-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 13px; color: var(--muted); }
+.legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.swatch { width: 10px; height: 10px; border-radius: 3px; border: 1px solid var(--border-strong); background: var(--panel); }
+.swatch.kernel { background: var(--kernel-soft); border-color: var(--kernel); }
+.swatch.host { background: var(--host-soft); border-color: var(--host); }
+.swatch.human { background: var(--accent-soft); border-color: var(--accent); }
+
+/* state machine */
+.sm-grid { position: relative; display: grid; gap: 8px; margin-bottom: 12px; }
+.sm-node {
+  border: 1px solid var(--border); border-radius: 8px; padding: 7px 9px;
+  background: var(--panel-soft); font-size: 13px; line-height: 1.4; color: var(--muted);
+}
+.sm-node b { display: block; color: var(--text); font: 500 13px var(--mono); margin-bottom: 2px; }
+.sm-node.active { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+.sm-node.active b { color: var(--accent); }
+/* A boxed scroll region: when the card is stretched, the spare height lands in
+   the transition list — which reads as list room, not as a half-empty card. */
+.trans-list {
+  flex: 1 1 auto; min-height: 0; overflow: auto;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--panel-soft); padding: 6px 8px;
+}
+.trans { font: 13px/1.55 var(--mono); color: var(--muted); padding: 2px 4px; border-radius: 4px; }
+.trans.active { background: var(--accent-soft); color: var(--accent); }
+
+/* step detail */
+.step-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.step-no { font: 600 13px var(--mono); color: #fff; background: var(--accent); border-radius: 6px; padding: 2px 7px; }
+.step-kind { font: 12px var(--mono); padding: 2px 7px; border-radius: 6px; background: var(--panel-soft); border: 1px solid var(--border); color: var(--muted); }
+.step-kind.fact { color: var(--fact); border-color: var(--fact); background: var(--fact-soft); }
+.step-kind.effect { color: var(--kernel); border-color: var(--kernel); background: var(--kernel-soft); }
+.step-kind.event, .step-kind.config { color: var(--host); border-color: var(--host); background: var(--host-soft); }
+.step-label { font-weight: 600; font-size: 16px; margin-bottom: 6px; }
+.step-route { font: 13px var(--mono); color: var(--accent); margin-bottom: 8px; }
+.step-note { color: var(--muted); font-size: 15px; }
+.empty-state { color: var(--hint); font-size: 14px; padding: 12px 0; }
+
+/* ── One dynamic board: controls, graph, state machine, step and log together.
+      The old sticky player sat at the bottom of a long page, far from the
+      diagram it drove — everything animated now shares one viewport. ── */
+.dynamic-board {
+  margin-top: 16px; padding: 14px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--panel-soft);
+}
+.dynamic-board > .section-title { margin-bottom: 10px; }
+.dynamic-board .viz-grid { margin-top: 0; }
+.nav-select {
+  font: inherit; font-size: 12px; padding: 5px 8px; max-width: 280px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--panel); color: var(--text);
+}
+
+/* controls + log */
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.counter { font: 12px var(--mono); color: var(--muted); white-space: nowrap; }
+select { font: inherit; font-size: 12px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); }
+
+/* The event log is tucked INTO the 模块与流转 card, directly under the SVG:
+   one glance shows both the edge the packet travelled and the event it wrote.
+   The card is a grid item, so it is stretched to the row height; the log then
+   takes every pixel the graph leaves behind instead of leaving a blank band. */
+.card.flow-card { display: flex; flex-direction: column; min-height: 0; }
+.flow-card > .section-title, .flow-card > #graph { flex: none; }
+.flow-log {
+  margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border);
+  flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0;
+}
+.flow-log-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; flex: none; }
+.flow-log-head h3 { margin: 0; font-size: 14px; font-weight: 600; color: var(--text); }
+.flow-log-head .hint { font-size: 12px; font-weight: 400; color: var(--hint); }
+/* A DEFINITE height, not a min-height. The card's own height has to be
+   predictable before the grid row is sized: when the log's only size came from
+   min-height, WebKit could size the row from the (shorter) right column and the
+   log then spilled past the card's bottom edge. `height` counts as a definite
+   size in every engine, so 模块与流转 is now exactly graph + 176px; flex-grow
+   still lets the log take spare height when the right column is taller. */
+.log-list {
+  flex: 1 1 auto; height: 176px; min-height: 0; max-height: none; overflow: auto;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--panel-soft); padding: 8px;
+}
+.log-row { display: flex; gap: 9px; align-items: baseline; font: 14px/1.6 var(--mono); color: var(--text); padding: 3px 4px; border-radius: 4px; }
+.log-list .log-row { width: 100%; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.log-list .log-row:hover { background: var(--accent-soft); }
+.log-row.on { background: var(--accent-soft); box-shadow: inset 2px 0 0 var(--accent); }
+/* Upcoming steps are listed but dimmed: the panel is a playbill, not a tail. */
+.log-row.pending { opacity: .45; }
+.log-row.done .n { color: var(--muted); }
+.log-row .n { color: var(--hint); width: 26px; flex: none; text-align: right; }
+.log-row .k { width: 70px; flex: none; color: var(--muted); }
+.log-row .k.fact { color: var(--fact); }
+.log-row .k.effect { color: var(--kernel); }
+.log-row .k.event, .log-row .k.config { color: var(--host); }
+.log-row .t { color: var(--text); }
+
+/* code cards */
+.code-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 12px; margin-top: 14px; }
+.code-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.code-card.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.code-card header { padding: 9px 12px; background: var(--panel-soft); border-bottom: 1px solid var(--border); }
+.code-card .sym { font: 500 13px var(--mono); color: var(--text); }
+.code-card .path { font: 10px var(--mono); color: var(--hint); display: block; margin-top: 2px; word-break: break-all; }
+.code-card pre { margin: 0; padding: 10px 12px; overflow: auto; font-size: 12px; line-height: 1.55; color: var(--text); max-height: 190px; }
+.code-card .why { padding: 9px 12px; border-top: 1px solid var(--border); font-size: 14px; color: var(--muted); }
+
+/* notes */
+.notes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 16px; }
+/* 术语与源码坐标 carries a mono term column plus full source paths: one track
+   was too narrow and the paths were being cut, so the card spans two. */
+.notes-grid > .terms-card { grid-column: span 2; min-width: 0; }
+/* Last resort: on a very narrow pane the mono term column cannot shrink, so the
+   table scrolls inside the card instead of being cut off by its edge. */
+.terms-wrap { overflow-x: auto; }
+.terms { width: 100%; border-collapse: collapse; font-size: 14px; }
+.terms th, .terms td { text-align: left; border-bottom: 1px solid var(--border); padding: 6px 6px; vertical-align: top; }
+.terms th { color: var(--hint); font-weight: 500; font-size: 12px; }
+.terms td:first-child { font-family: var(--mono); color: var(--accent); white-space: nowrap; }
+.terms td.src { font: 10px var(--mono); color: var(--hint); }
+.pitfalls { margin: 0; padding-left: 20px; font-size: 15px; color: var(--muted); }
+.pitfalls li { margin-bottom: 8px; }
+.lab { border-left: 3px solid var(--kernel); padding-left: 10px; margin-bottom: 12px; }
+.lab b { display: block; font-size: 15px; margin-bottom: 3px; }
+.lab p { font-size: 13px; color: var(--muted); margin: 0 0 4px; }
+.lab ol { margin: 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+.takeaways { margin: 0; padding-left: 20px; font-size: 15px; color: var(--muted); }
+.footer-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+/* Clickable flow-graph blocks → UML popup. */
+.node { cursor: pointer; }
+.node:hover .node-box { stroke: var(--accent); stroke-width: 2; }
+.node.carry:hover { opacity: .82; }
+.tb-hint { font-size: 11px; color: var(--hint); white-space: nowrap; }
+
+/* Floating player: always visible while scrolling the long lesson page.
+   讲义 / 教程 / 课程地图 live here too, beside the playback controls. */
+.player {
+  position: sticky; bottom: 14px; z-index: 25; margin-top: 18px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--panel); border: 1px solid var(--border-strong); border-radius: 12px;
+  padding: 9px 12px; box-shadow: 0 6px 22px rgba(20, 32, 48, .12);
+}
+.player .spacer { flex: 1; }
+.player .mini { font-size: 11px; color: var(--hint); }
+.player-docs { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Step progress sits on the floating bar: the counter and the current step
+   name stay visible no matter how far the dynamic board has scrolled away. */
+.player-progress {
+  display: inline-flex; align-items: center; gap: 8px;
+  flex: 0 1 340px; min-width: 190px;
+  padding: 2px 9px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--panel-soft);
+}
+.player-progress input[type=range] { flex: 1 1 90px; min-width: 70px; width: auto; }
+.player-progress .counter { color: var(--accent); font-weight: 600; }
+.step-brief {
+  font-size: 11px; color: var(--muted); max-width: 168px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* course map */
+.map-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 16px; }
+.map-card { display: block; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; color: var(--text); }
+.map-card:hover { border-color: var(--accent); text-decoration: none; }
+.map-card .no { font: 600 12px var(--mono); color: var(--accent); }
+.map-card h3 { margin: 6px 0 6px; font-size: 15px; }
+.map-card p { font-size: 14px; color: var(--muted); margin: 0 0 10px; }
+.map-card .doc { font: 10px var(--mono); color: var(--hint); }
+.map-flow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.map-flow span { font-size: 11px; color: var(--hint); }
+
+/* ── 讲义弹窗：README.md 就地渲染（sa-lessons 的做法）。
+      srcdoc 预览里相对链接会解析到宿主应用 origin，所以绝不跳转。 ── */
+.modal {
+  position: fixed; inset: 0; z-index: 50; display: none;
+  background: rgba(8, 12, 20, .68); backdrop-filter: blur(2px);
+  align-items: center; justify-content: center; padding: 24px;
+  flex-direction: column;
+}
+.modal-head {
+  display: flex; align-items: center; gap: 10px; width: min(920px, 100%);
+  flex: 0 0 auto; padding: 10px 16px; border: 1px solid var(--border);
+  border-bottom: none; border-radius: 12px 12px 0 0;
+  background: var(--panel); color: var(--text);
+}
+.modal-title { font-size: 13px; font-weight: 600; }
+.modal-actions { margin-left: auto; }
+.modal-body {
+  width: min(920px, 100%); flex: 0 1 auto; min-height: 0;
+  max-height: calc(100vh - 110px); overflow-y: auto;
+  padding: 20px 28px 40px; border: 1px solid var(--border); border-radius: 0 0 12px 12px;
+  background: var(--panel); color: var(--text); font-size: 15px; line-height: 1.75;
+}
+.modal-body h1 { font-size: 20px; margin: 4px 0 10px; }
+.modal-body h2 { font-size: 16px; margin: 22px 0 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.modal-body h3, .modal-body h4 { font-size: 14px; margin: 16px 0 6px; }
+.modal-body p { margin: 8px 0; }
+.modal-body blockquote {
+  margin: 10px 0; padding: 8px 14px; border-left: 3px solid var(--accent);
+  background: var(--panel-soft); border-radius: 0 8px 8px 0; color: var(--muted);
+}
+.modal-body code { background: var(--panel-soft); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: 12.5px; }
+.modal-body pre.md-code {
+  background: var(--panel-soft); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 14px; overflow-x: auto; margin: 10px 0;
+}
+.modal-body pre.md-code code { background: none; border: 0; padding: 0; font-size: 12.5px; }
+.modal-body ul, .modal-body ol { margin: 8px 0; padding-left: 24px; }
+.modal-body li { margin: 3px 0; }
+.modal-body table { border-collapse: collapse; margin: 12px 0; width: 100%; font-size: 13px; }
+.modal-body th, .modal-body td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+.modal-body th { background: var(--panel-soft); }
+.modal-body hr { border: 0; border-top: 1px solid var(--border); margin: 18px 0; }
+.modal-body a { color: var(--accent); }
+.modal-body .md-empty, .modal-body .md-deadlink { color: var(--hint); }
+
+/* ── UML popup: a three-compartment SVG class box with its neighbours, then
+      the real code, the full interface list and the steps the block joins. ── */
+#uml-modal > .modal-head, #uml-modal > .modal-body { width: min(1080px, 100%); }
+.uml-top { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 14px; align-items: start; }
+.uml-diagram {
+  background: var(--panel-soft); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px; overflow-x: auto;
+}
+.uml-svg { display: block; width: 100%; min-width: 420px; height: auto; }
+.uml-svg .uml-box { fill: var(--panel); stroke: var(--border-strong); stroke-width: 1.2; }
+.uml-svg .uml-box.focus { stroke: var(--accent); stroke-width: 2; }
+.uml-svg .uml-sep { stroke: var(--border); stroke-width: 1; }
+.uml-svg .uml-rel { fill: none; stroke: var(--border-strong); stroke-width: 1.3; }
+.uml-svg .uml-arrowhead { fill: var(--border-strong); }
+.uml-svg .uml-t-stereo { fill: var(--accent); font: 11px var(--mono); }
+.uml-svg .uml-t-name { fill: var(--text); font: 600 14px var(--sans); }
+.uml-svg .uml-t-name.small { font-size: 12px; }
+.uml-svg .uml-t-file { fill: var(--hint); font: 10px var(--mono); }
+.uml-svg .uml-t-label { fill: var(--hint); font: 10px var(--sans); letter-spacing: .04em; }
+.uml-svg .uml-t-attr { fill: var(--muted); font: 11px var(--mono); }
+.uml-svg .uml-t-method { fill: var(--text); font: 11px var(--mono); }
+.uml-meta { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--panel-soft); }
+.uml-line { font-size: 14px; margin-bottom: 7px; color: var(--muted); overflow-wrap: anywhere; }
+.uml-line b { display: block; color: var(--hint); font-size: 10px; font-weight: 500; letter-spacing: .05em; }
+.uml-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; margin-top: 4px; }
+.uml-col h3 { margin: 16px 0 8px; font-size: 13px; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+.uml-list { margin: 0; padding-left: 18px; }
+.uml-list li { font-size: 13px; margin-bottom: 5px; color: var(--muted); overflow-wrap: anywhere; }
+.uml-list.mono { font-family: var(--mono); font-size: 11.5px; }
+.uml-note { font-size: 11.5px; color: var(--hint); }
+.uml-tag { font: 10px var(--mono); background: var(--accent-soft); color: var(--accent); border-radius: 5px; padding: 1px 5px; }
+.uml-code { border: 1px solid var(--border); border-radius: 9px; overflow: hidden; margin-bottom: 10px; }
+.uml-code header { padding: 8px 11px; background: var(--panel-soft); border-bottom: 1px solid var(--border); }
+.uml-code .sym { font: 500 12px var(--mono); }
+.uml-code .path { display: block; font: 10px var(--mono); color: var(--hint); word-break: break-all; }
+.uml-code pre { margin: 0; padding: 10px 12px; font-size: 11px; line-height: 1.55; overflow: auto; max-height: 230px; white-space: pre; }
+.uml-code .why { padding: 8px 12px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
+.uml-steps { display: flex; flex-wrap: wrap; gap: 6px; }
+.uml-steps .btn { max-width: 100%; text-align: left; white-space: normal; }
+
+@media (max-width: 1000px) {
+  .hero-grid, .viz-grid, .uml-top, .uml-grid { grid-template-columns: 1fr; }
+  .wrap { padding: 0 14px 130px; }
+  .topbar-inner { padding: 8px 14px; }
+  .modal { padding: 12px; }
+  .modal-body { padding: 16px 18px 28px; max-height: calc(100vh - 90px); }
+  .tb-hint { display: none; }
+  /* On a narrow bar the progress gets its own full-width row. */
+  .player-progress { flex: 1 1 100%; }
+  .player .mini { display: none; }
+  .flow-log-head { flex-wrap: wrap; gap: 2px; }
+  /* Narrow screens stack the columns, so there is no spare height to fill;
+     a full-width card can afford a taller log than the 200px floor. */
+  .flow-log { min-height: 0; }
+  .log-list { height: 240px; }
+}
