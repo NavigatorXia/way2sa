@@ -1,6 +1,6 @@
 # Parts / Repositories UML — dsh-superagent-prototype
 
-> 源码基准：`/Users/xleo/Agent/way2sa/dsh-superagent-prototype`（发布版研究原型，与长文/内部版不完全相同）。
+> 源码基准：同仓库根的 `dsh-superagent-prototype/`（submodule，只读；发布版研究原型，与长文/内部版不完全相同）。
 > 本文每条断言都带 `file:line`，行号以当前工作树为准；`src/...:N` 均相对该仓库根。
 > **配套**：同目录 `parts-uml.html`（自包含渲染页，可直接 `file://` 或 Shan 预览打开）、`ENGINE-RUNTIME-UML.md` / `engine-runtime-uml.html`（组合根与事务门的 UML）。
 > 本文补的是 `Engine` 内部的 5 个 `EnginePart` 子类 + 它们唯一的状态出口 `Repositories`。

@@ -115,6 +115,7 @@ README.zh.md                  本文件（地图页讲义由课程注册表实�
 assets/                       course.css / course.js / curriculum.js / uml.js（单一数据源）
 lessons/
   L01-domain/ … L08-cookbook/ 每课 README.md + TUTORIAL.md + data.js + index.html(生成物)
+  super-agent/                三篇深读笔记（Markdown + 配套渲染页）；不进 assets/curriculum.js，四个校验脚本不覆盖它
 tools/                        build.mjs / validate.mjs / smoke.mjs / tutorials.mjs
 dsh-superagent-prototype/     原型仓库（submodule，只读参考）
 ```

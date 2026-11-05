@@ -1,6 +1,6 @@
 # 飞书消息的完整生命过程 — dsh-superagent-prototype
 
-> **源码基准**：`/Users/xleo/Agent/way2sa/dsh-superagent-prototype`，git `6337fc8`。本文每条断言都带 `file:line`，行号以当前工作树为准。
+> **源码基准**：同仓库根的 `dsh-superagent-prototype/`（submodule，只读），git `6337fc8`。本文每条断言都带 `file:line`，行号以当前工作树为准。
 > **配套动态页**：同目录 `feishu-message-lifecycle.html`（自包含，可直接 `file://` 打开，也可在 Shan 预览里播放）。
 > **起点**：你给出的 `ctx.receive(trigger)` 闭包链。我逐条复核了，结论一致；只有 3 处行号偏移，见 §0.2。本文把这条「入核」链向前补到飞书事件、向后补到回信发回飞书，形成一条完整的生命线。
 > **姊妹篇**：`ENGINE-RUNTIME-UML.md`（核心/组合根类图）、`PARTS-UML.md`（5 个 `EnginePart` 与 `Repositories` 端口）。那两份讲「谁是什么」，这一份讲「一条消息怎么穿过它们」。

@@ -18,7 +18,9 @@ README.md                     this file
 README.zh.md                  the detailed Chinese write-up
 AGENTS.md                     project conventions
 assets/                       course.css / course.js / curriculum.js / uml.js — single source of truth
-lessons/L01-domain/ … L08-cookbook/   README.md + TUTORIAL.md + data.js + index.html (generated)
+lessons/L01-domain/ … L08-cookbook/
+                              README.md + TUTORIAL.md + data.js + index.html (generated)
+lessons/super-agent/          three deep-dive notes (markdown + rendered HTML), reference material outside the curriculum
 tools/                      build.mjs / validate.mjs / smoke.mjs / tutorials.mjs
 dsh-superagent-prototype/   upstream prototype, a git submodule used as read-only reference
 ```
