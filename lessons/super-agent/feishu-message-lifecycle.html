@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>飞书消息的完整生命过程 · dsh-superagent-prototype</title>
+<style>
+:root{
+  --bg:#f4f6fb; --card:#ffffff; --card2:#f8f9ff; --ink:#111a33; --ink2:#2c3552;
+  --muted:#626c85; --line:#dde1ed; --accent:#4a55e8; --accent-soft:#eceeff;
+  --blue:#155fa8; --blue-soft:#e6f1fc; --green:#0c6b53; --green-soft:#e0f4ec;
+  --amber:#8a5604; --amber-soft:#fbf1da; --red:#b1362f; --red-soft:#fbeae8;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+html[data-theme="dark"]{
+  --bg:#0f111a; --card:#171a27; --card2:#1c2030; --ink:#eef1fb; --ink2:#c9d1e8;
+  --muted:#98a2bd; --line:#2c3246; --accent:#939bff; --accent-soft:#20264a;
+  --blue:#8bbcf0; --blue-soft:#14263b; --green:#63d1aa; --green-soft:#123027;
+  --amber:#eec175; --amber-soft:#32270f; --red:#f08b84; --red-soft:#3a1c1b;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:26px 18px 64px;background:var(--bg);color:var(--ink);font:14px/1.68 var(--sans)}
+.wrap{max-width:1360px;margin:0 auto}
+header.top{border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:18px}
+h1{font-size:29px;letter-spacing:-.025em;margin:0 0 6px;font-weight:700}
+.sub{color:var(--muted);font-size:13px;margin:0}
+.sub code,.lead code,.note code,footer code{font:12px var(--mono);background:var(--card2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.note{margin:12px 0 0;font-size:12.5px;color:var(--muted);border-left:3px solid var(--accent);padding-left:12px}
+h2{font-size:17px;margin:26px 0 10px;letter-spacing:-.01em}
+h2 .n{display:inline-grid;place-items:center;width:23px;height:21px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font:600 11.5px var(--mono);margin-right:8px;vertical-align:2px}
+.lead{color:var(--muted);font-size:12.5px;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card>h3{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--card2);font-weight:600}
+
+/* controls */
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:0 0 14px}
+button{font:600 12.5px var(--sans);color:var(--ink2);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 13px;cursor:pointer;transition:.15s}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;min-width:82px}
+html[data-theme="dark"] button.primary{color:#10121b}
+button:disabled{opacity:.42;cursor:not-allowed}
+.sep{width:1px;height:24px;background:var(--line);margin:0 4px}
+.counter{font:600 12px var(--mono);color:var(--muted);min-width:62px;text-align:center}
+.speed{font:11.5px var(--mono);color:var(--muted)}
+.scenarios{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 14px}
+.chip{font:600 12px var(--sans);padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--accent)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+html[data-theme="dark"] .chip.on{color:#10121b}
+.scenario-desc{font-size:12px;color:var(--muted);margin:0 0 12px;min-height:19px}
+.progress{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin:0 0 16px}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .35s ease}
+
+/* main grid */
+.grid{display:grid;grid-template-columns:minmax(0,1.62fr) minmax(300px,1fr);gap:15px;align-items:start}
+.diagram{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:660px;position:relative}
+.diagram svg{display:block;width:100%;height:auto}
+.rightcol{display:flex;flex-direction:column;gap:13px}
+
+/* SVG */
+.lifeline{stroke:var(--line);stroke-width:1;stroke-dasharray:3 6}
+.lane-head{fill:var(--card2);stroke:var(--line);stroke-width:1}
+.lane-name{fill:var(--ink);font:600 11.5px var(--sans);text-anchor:middle}
+.lane-sub{fill:var(--muted);font:10px var(--mono);text-anchor:middle}
+.band{fill:var(--accent-soft);opacity:.72}
+.band-div{fill:var(--amber-soft);stroke:var(--amber);stroke-width:1;stroke-dasharray:4 3}
+.band-label{fill:var(--accent);font:600 10.5px var(--mono);letter-spacing:.05em}
+.band-label-div{fill:var(--amber);font:600 10.5px var(--mono)}
+.step{cursor:pointer}
+.step .arrow{stroke:var(--muted);stroke-width:1.6}
+.step .tip{fill:var(--muted)}
+.step .endpoint{fill:var(--muted)}
+.step .self-dot{fill:var(--card);stroke:var(--muted);stroke-width:1.6}
+.step .self-num{fill:var(--muted);font:600 10px var(--mono);text-anchor:middle}
+.step .lbl{fill:var(--ink2);font:600 11px var(--sans);paint-order:stroke;stroke:var(--card);stroke-width:3.5px;stroke-linejoin:round}
+.step .idx{fill:var(--muted);font:10px var(--mono)}
+.step.done{opacity:.52}
+.step.future{opacity:.26}
+.step.done .arrow{stroke:var(--blue)}
+.step.done .endpoint,.step.done .tip{fill:var(--blue)}
+.step.active .arrow{stroke:var(--accent);stroke-width:3}
+.step.active .endpoint,.step.active .tip{fill:var(--accent)}
+.step.active .self-dot{fill:var(--accent-soft);stroke:var(--accent);stroke-width:2.5}
+.step.active .self-num{fill:var(--accent)}
+.step.active .lbl{fill:var(--accent);font-weight:700}
+.step:hover .lbl{fill:var(--accent)}
+.step.active .halo{fill:var(--accent);opacity:.13}
+#token{fill:var(--accent);stroke:var(--card);stroke-width:2;filter:drop-shadow(0 0 5px var(--accent))}
+
+/* detail */
+.detail .body{padding:13px 15px 15px}
+.dhead{display:flex;align-items:flex-start;gap:10px;margin-bottom:9px}
+.dnum{display:grid;place-items:center;flex:0 0 30px;height:30px;border-radius:8px;background:var(--accent);color:#fff;font:700 13px var(--mono)}
+html[data-theme="dark"] .dnum{color:#10121b}
+.dtitle{font-size:15.5px;font-weight:700;line-height:1.4;margin:0}
+.dphase{font:11px var(--mono);color:var(--muted);margin-top:2px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 11px}
+.badge{font:600 10.5px var(--mono);border-radius:5px;padding:2px 7px;border:1px solid var(--line);color:var(--muted);background:var(--card2)}
+.badge.sync{color:var(--green);border-color:var(--green);background:var(--green-soft)}
+.badge.async{color:var(--amber);border-color:var(--amber);background:var(--amber-soft)}
+.badge.domain{color:var(--blue);border-color:var(--blue);background:var(--blue-soft)}
+.badge.branch{color:var(--red);border-color:var(--red);background:var(--red-soft)}
+pre{margin:0 0 11px;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow:auto;font:11.5px/1.72 var(--mono);color:var(--ink2);white-space:pre-wrap;word-break:break-word}
+.src{font:11px var(--mono);color:var(--accent);margin:0 0 10px;word-break:break-all}
+.dtext{font-size:12.8px;color:var(--ink2);margin:0 0 10px}
+.dtext b{color:var(--ink)}
+.io{font:11.5px/1.7 var(--mono);color:var(--muted);background:var(--card2);border-left:3px solid var(--blue);padding:8px 10px;border-radius:0 6px 6px 0;word-break:break-word}
+
+/* timeline */
+.timeline{display:flex;flex-wrap:wrap;gap:5px;padding:11px 13px;max-height:150px;overflow:auto}
+.tl{font:600 10.5px var(--mono);border:1px solid var(--line);background:var(--card2);color:var(--muted);border-radius:6px;padding:4px 7px;cursor:pointer;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl:hover{border-color:var(--accent)}
+.tl.done{color:var(--blue);border-color:var(--blue)}
+.tl.on{background:var(--accent);border-color:var(--accent);color:#fff}
+html[data-theme="dark"] .tl.on{color:#10121b}
+
+/* shape strip */
+.shapes{display:flex;gap:6px;overflow-x:auto;padding:11px 13px}
+.shape{flex:0 0 auto;border:1px solid var(--line);background:var(--card2);border-radius:8px;padding:7px 9px;min-width:104px}
+.shape b{display:block;font:600 11px var(--mono);color:var(--muted)}
+.shape span{display:block;font-size:11px;color:var(--ink2);margin-top:3px;line-height:1.45}
+.shape.on{border-color:var(--accent);background:var(--accent-soft)}
+.shape.on b{color:var(--accent)}
+
+/* chain */
+.chain{padding:4px 14px 14px}
+.chain ol{list-style:none;margin:0;padding:0;counter-reset:c}
+.chain li{counter-increment:c;font:11.5px/1.6 var(--mono);color:var(--ink2);padding:7px 9px 7px 32px;position:relative;border-bottom:1px dashed var(--line);border-radius:6px}
+.chain li:last-child{border-bottom:0}
+.chain li:before{content:counter(c);position:absolute;left:7px;top:7px;width:17px;height:17px;border-radius:5px;background:var(--card2);border:1px solid var(--line);color:var(--muted);font:600 10px var(--mono);display:grid;place-items:center}
+.chain li.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.chain li.on:before{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chain li em{font-style:normal;color:var(--muted);display:block;font-size:10.5px;margin-top:2px}
+.chain li.on em{color:var(--accent);opacity:.8}
+.footnote{font-size:11.5px;color:var(--muted);padding:0 14px 13px}
+
+/* lower sections */
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-top:14px}
+.cols .card .body{padding:11px 14px 14px;font-size:12.3px;color:var(--ink2)}
+.cols ul{margin:0;padding-left:17px}
+.cols li{margin-bottom:7px}
+.cols li:last-child{margin-bottom:0}
+.cols code{font:11.5px var(--mono);color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:12px}
+th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--card2);font:600 10.5px var(--mono);letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
+tr:last-child td{border-bottom:0}
+td code{font:11.5px var(--mono);color:var(--ink2)}
+.mono{font:11.5px var(--mono);color:var(--muted)}
+footer{margin-top:30px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.8}
+footer a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent)}
+@media (max-width:1080px){.grid{grid-template-columns:1fr}.cols{grid-template-columns:1fr}.diagram{max-height:520px}}
+@media (max-width:640px){body{padding:16px 10px 44px}h1{font-size:23px}.bar{gap:6px}button{padding:6px 10px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>飞书消息的完整生命过程</h1>
+  <p class="sub">源码基准 <code>dsh-superagent-prototype</code> · git <code>6337fc8</code> · 从 <code>im.message.receive_v1</code> 到 <code>+messages-reply --reply-in-thread</code>。每一步都带 <code>file:line</code>。</p>
+  <p class="note">起点是你追的 <code>ctx.receive(trigger)</code> 闭包链（已逐条复核，行号 3 处微移）。本页把它向前补到飞书事件、向后补到回信发回飞书：24 步泳道时序、4 种分支、可播放。完整论证见同目录 <code>FEISHU-MESSAGE-LIFECYCLE.md</code>。</p>
+</header>
+
+<div class="scenarios" id="scenarios"></div>
+<p class="scenario-desc" id="scenarioDesc"></p>
+
+<div class="bar">
+  <button class="primary" id="play">▶ 播放</button>
+  <button id="prev">◀ 上一步</button>
+  <button id="next">下一步 ▶</button>
+  <button id="restart">↺ 重来</button>
+  <span class="sep"></span>
+  <span class="counter" id="counter">1 / 24</span>
+  <span class="speed">速度</span>
+  <button id="speed" data-i="1">1×</button>
+</div>
+<div class="progress"><i id="progress"></i></div>
+
+<div class="grid">
+  <div class="diagram" id="diagram"><svg id="svg" role="img" aria-label="飞书消息生命周期泳道时序图"></svg></div>
+  <div class="rightcol">
+    <div class="card detail" id="detail"></div>
+    <div class="card"><h3>时间轴 · 点任意一步跳转</h3><div class="timeline" id="timeline"></div></div>
+    <div class="card"><h3>数据形态演化 · 当前形态高亮</h3><div class="shapes" id="shapes"></div></div>
+    <div class="card"><h3>入核闭包链 · receive 只有一个赋值点</h3><div class="chain" id="chain"></div><div class="footnote" id="chainNote"></div></div>
+  </div>
+</div>
+
+<h2><span class="n">A</span>三个入口、两条边界、一次反向读取</h2>
+<p class="lead">所有路径最终都汇到同一个 <code>receive()</code> helper；分叉只在 <code>Intake</code> 里发生一次。</p>
+<div class="cols">
+  <div class="card"><h3>三个入口（从第 5 步起同路）</h3><div class="body"><ul>
+    <li><b>实时事件流</b> <code>feishu-loops.ts:86-97</code> → <code>receive():27</code></li>
+    <li><b>历史补收</b> <code>backfillChat():188</code> → <code>receive():27</code></li>
+    <li><b>话题轮询</b> <code>pollThread():259</code> → <code>receive():27</code></li>
+    <li>都靠 <code>feishuTriggerId()</code> 的确定性 ID 在 <code>intake.ts:23</code> 去重</li>
+    <li>旁路：<code>runtime.ts:194</code> 的 <code>Runtime.receive</code> 直接进 <code>Passes</code>，HTTP / 工具走这条</li>
+  </ul></div></div>
+  <div class="card"><h3>两条边界</h3><div class="body"><ul>
+    <li><b>端口缝</b> <code>core/ports.ts:12-134</code>：<code>SourceScope / Policy / Assessor / Executor / Outbox / Repositories</code> 六个接口。Engine 不知道有飞书、SQLite 或 lark-cli</li>
+    <li><b>事务缝</b> <code>engine.ts:48</code> 开始 → <code>intake.ts:61</code> 结束。所有跨聚合写入在一个 <code>repo.atomic()</code> 里</li>
+    <li><b>同步 / 异步缝</b>：<code>intake.receive</code> 返回前消息已完整落库但还没被理解；<code>passes.ts:37</code> 的 <code>request()</code> 才启动理解</li>
+  </ul></div></div>
+  <div class="card"><h3>同一条消息被读 3 次</h3><div class="body"><ul>
+    <li><b>推</b>：事件流 <code>feishu-loops.ts:86-97</code></li>
+    <li><b>拉</b>：主 Session 评估时经 <code>admissionContext</code> → <code>feishu-read.ts:153-171</code> 反向读 <code>message/root/parent/thread</code></li>
+    <li><b>再拉</b>：工人侧 <code>sourceLink</code> / <code>repliesTo</code>（<code>dsh.ts:345-350</code>、<code>feishu.ts:69</code>）</li>
+    <li>三条完全不同的代码路径，读的是同一条飞书消息</li>
+  </ul></div></div>
+</div>
+
+<h2><span class="n">B</span>4 种命运</h2>
+<table>
+<thead><tr><th>命运</th><th>终止点</th><th>持久化</th><th>唤醒主 Session</th></tr></thead>
+<tbody>
+<tr><td>机器人自己的消息</td><td><code>feishu-trigger.ts:33</code> / <code>feishu-loops.ts:91</code></td><td>否</td><td>否</td></tr>
+<tr><td><b>duplicate</b></td><td><code>intake.ts:23</code></td><td>否（不改状态）</td><td>否，<code>passes.ts:37</code> 只在 <code>'stored'</code> 时 <code>request()</code></td></tr>
+<tr><td><b>filtered</b></td><td><code>intake.ts:26-29</code></td><td>是：trigger + <code>filtered</code> disposition</td><td>否</td></tr>
+<tr><td>stored → ignore / unavailable</td><td><code>evals.ts:102-106</code> / <code>decideEval</code></td><td>是：Decision（可审计）</td><td>是，但无工单</td></tr>
+<tr><td>stored → accept / 工单认领</td><td><code>tickets.ts:37</code> / <code>:234</code></td><td>是：全套领域对象</td><td>是 → 回信</td></tr>
+</tbody>
+</table>
+
+<h2><span class="n">C</span>从这条链读出的设计决策</h2>
+<div class="cols">
+  <div class="card"><div class="body"><ul>
+    <li><b>Source 永远拿不到 Engine</b>。<code>SourceContext</code> 是能力白名单（<code>host.ts:31-66</code>），中间隔 <code>source-context.ts</code> 与 <code>passes.ts</code> 两层闭包——不是靠接口隐藏，是装配时就没把引用传下去。</li>
+    <li><b>收得到 ≠ 想得动</b>。Intake 同步落库，Passes 异步理解；<code>pump()</code> 合并并发，2 秒兜底时钟，暂停/setup 未完成时消息照收（<code>passes.ts:58</code>）。</li>
+    <li><b>过滤也留痕</b>。<code>filtered</code> 照样存进仓库（<code>intake.ts:27</code>），审计能回答「这条为什么没反应」。</li>
+  </ul></div></div>
+  <div class="card"><div class="body"><ul>
+    <li><b>回信地址随消息出生</b>。<code>Trigger.channel</code>（<code>feishu-trigger.ts:8-9</code>）一路带到 <code>Replies.reply</code>；出核时 <code>channelAllowed</code> 再查一次「这个群现在还收不收」（<code>feishu.ts:62-63</code>）。</li>
+    <li><b>一切跨域副作用都持久化</b>。<code>assessment / launch / delivery / relay / notice / reply</code> 六种 effect 在事务内 enqueue、提交后派发、失败指数退避、按 requestId 幂等（<code>effects.ts:11-24,61-65,130-146</code>）。</li>
+  </ul></div></div>
+  <div class="card"><div class="body"><ul>
+    <li><b>确定性 ID 换来幂等</b>：<code>feishuTriggerId</code>（<code>:18</code>）、<code>ack</code> id（<code>replies.ts:56</code>）、<code>--idempotency-key</code>（<code>feishu-channel.ts:23</code>）、<code>AgentDelivery.send</code> 的 requestId（<code>delivery.ts:68-86</code>）。</li>
+    <li><b>跟随优先于评估</b>。<code>followupOwners()</code>（<code>model.ts:75-88</code>）让已有工单的人话直接给工人，主 Session 只能 stop（<code>evals.ts:148</code>），避免两个决策者。</li>
+  </ul></div></div>
+</div>
+
+<footer>
+  飞书消息生命过程 · 源码基准 <code>dsh-superagent-prototype</code> @ <code>6337fc8</code> · 完整论证与 Mermaid / PlantUML 源见同目录 <a href="FEISHU-MESSAGE-LIFECYCLE.md">FEISHU-MESSAGE-LIFECYCLE.md</a> · 静态结构见 <a href="engine-runtime-uml.html">engine-runtime-uml.html</a> 与 <a href="parts-uml.html">parts-uml.html</a>。
+  <br>主题跟随宿主 Appearance（<code>WAY2SA_PARENT_THEME</code> / <code>__SHAN_THEME__</code> / <code>postMessage</code>），宿主未发布时跟随系统。快捷键：<code>←</code> <code>→</code> 切换、<code>空格</code> 播放/暂停、<code>R</code> 重来。
+  <br><span style="color:var(--muted)">注：Shan 预览用 <code>srcdoc</code> 沙箱，上面的相对链接在那里不可跳转；请从同目录直接打开另一份文件（<code>file://</code> 下正常）。</span>
+</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- theme bridge (Shan srcdoc / OS fallback) ---------- */
+  try {
+    var hint = window.__SHAN_THEME__ || window.WAY2SA_PARENT_THEME;
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    function apply() {
+      var t = (hint === 'dark' || hint === 'light') ? hint : (mq.matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+      document.documentElement.style.colorScheme = t;
+    }
+    apply();
+    if (mq.addEventListener) mq.addEventListener('change', apply);
+    window.addEventListener('message', function (e) {
+      var d = e.data; if (!d) return;
+      var v = d.shanTheme || d.way2saTheme;
+      if (v === 'dark' || v === 'light') { hint = v; apply(); }
+    });
+  } catch (e) { /* opaque-origin sandbox: CSS media query takes over */ }
+
+  /* ---------- lanes ---------- */
+  var LANES = [
+    { name: '飞书', sub: '用户 / 群' },
+    { name: 'Feishu Source', sub: 'lark-cli · 插件' },
+    { name: 'SourceContext', sub: '· Passes' },
+    { name: 'Engine', sub: 'Intake' },
+    { name: 'Engine', sub: 'Evals · Tickets' },
+    { name: '主 Session', sub: 'MasterAssessor' },
+    { name: '工人 Session', sub: 'DshExecutor' },
+    { name: 'Replies · Outbox', sub: '· Effects' }
+  ];
+  var PHASES = {
+    A: '阶段 A · 入口（同步闭包链）',
+    B: '阶段 B · 时钟（异步起点）',
+    C: '阶段 C · 评估与主 Session 决策',
+    D: '阶段 D · 开工单与执行',
+    E: '阶段 E · 回信出核'
+  };
+  var SHAPES = [
+    ['① 飞书事件', 'message_id / chat_id / mentions / content'],
+    ['② Trigger', 'id · threads · actor · human · channel · meta'],
+    ['③ ReceiveResult', "'stored' | 'duplicate' | 'filtered'"],
+    ['④ 领域记录', 'Trigger + Disposition(fanout, context, evalId)'],
+    ['⑤ Evaluation', 'triggerIds · primary · strength · basis · deadline'],
+    ['⑥ Candidate', 'evalId · thread · triggers · tickets'],
+    ['⑦ Decision', 'kind · reason · mandate? · ticketId?'],
+    ['⑧ Ticket', 'origin · channels[] · inputs[] · Assignment'],
+    ['⑨ Outbound', '{id, channel, text, kind} → receipt'],
+    ['⑩ 飞书回复', '--message-id · --reply-in-thread · --idempotency-key']
+  ];
+
+  /* ---------- steps ---------- */
+  function S(id, phase, from, to, label, title, src, code, text, io, shape, mode, extra) {
+    return { id: id, phase: phase, from: from, to: to, label: label, title: title, src: src,
+      code: code, text: text, io: io, shape: shape, mode: mode || 'sync', extra: extra || [] };
+  }
+  var STEPS = [
+    S('s01','A',0,1,'@机器人 / 私聊','用户发消息，飞书推送事件',
+      'sources/feishu-loops.ts:70-73',
+      'spawn(bot(ctx).cli, [\n  "event", "consume", "im.message.receive_v1",\n  "--as", "bot"\n], { stdio: ["pipe","pipe","pipe"] })',
+      '插件 apply() 在 :136 用 sourceContext(ctx.orchestrator, feishuKind) 起 runFeishu()，后者并行跑 watch / backfillLoop / chatNamesLoop 三条常驻循环。实时事件由 lark-cli 子进程以 stdout 文本流推给 Source。',
+      'IN  飞书平台事件\nOUT stdout 一行 JSON', 0),
+    S('s02','A',1,1,'逐行消费 stdout','readline + chain 串行化',
+      'sources/feishu-loops.ts:74-97',
+      'let chain = Promise.resolve()\nstdout.on("line", line => {\n  chain = chain.then(async () => { /* ... */ })\n})',
+      ':75 的 chain 与 :87 的 chain = chain.then(...) 把事件串行化，保证同群消息按到达顺序入库。:88 有 1 MiB 上限，:91 会丢掉 Source 已关闭后才读到的事件。',
+      'IN  一行 JSON（≤ 1 MiB）\nOUT 串行队列中的一个任务', 0),
+    S('s03','A',1,1,'feishuTrigger 归一化','丢弃机器人自己 → 造 Trigger',
+      'sources/feishu-trigger.ts:18,31-44',
+      'if (event.sender_id === botId || event.sender_id === botAppId) return\nconst thread = feishuThreadId(chat_id, root_id, message_id)\nreturn { id: feishuTriggerId(message_id), source: "feishu",\n  threads: [{ source: "feishu", id: thread }], actor, human,\n  addressed, at, text, channel: feishuChannel(...), meta }',
+      '两个贯穿全生命周期的 ID 在这里生成：trigger.id = key("feishu", messageId) 确定性（三条读路径天然去重）；channel.address.messageId = om_... 是后面回信用的 --message-id。thread = chatId:(rootId ?? messageId)。',
+      'IN  FeishuEvent\nOUT Trigger（带 channel 回信地址）', 1),
+    S('s04','A',1,2,'ctx.receive(trigger)','调用方入核 + 装饰 Thread',
+      'sources/feishu-loops.ts:26-33',
+      'async function receive(ctx, trigger) {\n  await ctx.receive(trigger)          // :27 入核\n  for (const ref of trigger.threads)\n    ctx.threads.describe(threadKey(ref), { url, facts: { chat } }) // :32\n}',
+      '实时流 :95、历史补收 :188、话题轮询 :259 都调这个 helper。:32 是入核之后的旁路装饰（群链接 + 群名），不参与领域决策。注意你给的 :31 在当前工作树是 :27，同一个 helper（:26-33）。',
+      'IN  Trigger\nOUT await ReceiveResult', 1, 'sync', ['chain1']),
+    S('s05','A',2,2,'source-context.ts:46','receive 唯一赋值点',
+      'sources/host.ts:42,67 · app/source-context.ts:11-27,33-46',
+      'receive: trigger => deps.receive(trigger),   // :46\n\n// host.ts:42 类型声明（Source 看到的唯一面）\nreceive(trigger: Trigger): ReceiveResult | Promise<ReceiveResult>',
+      'sourceContext(host, kind) = host.context(kind)（host.ts:67）；Runtime.context() 在 runtime.ts:176 现造一份 sourceContextOf(this.sourceDeps, kind)。ctx.receive 本身没有逻辑，只是把 deps.receive 包一层；deps 契约在 :26。',
+      'IN  Trigger\nOUT deps.receive(trigger)', 1, 'sync', ['chain2']),
+    S('s06','A',2,2,'runtime.ts:161','deps.receive 在这里赋值',
+      'app/runtime.ts:83,159-161',
+      'this.sourceDeps = { store, engine, outbox, commands, sources,\n  get ready() { return runtime.ready },\n  configured: () => setup.configured(),\n  receive: trigger => passes.receive(trigger)   // :161\n}',
+      '构造器里一次性填好 this.sourceDeps（字段声明 :83）。这是闭包链的第二跳，也是 Source 与 Engine 之间的第一层隔离。Source 侧永远看不到 engine 对象本身。',
+      'IN  Trigger\nOUT passes.receive(trigger)', 1, 'sync', ['chain3']),
+    S('s07','A',2,2,'Passes.receive','closing 守卫 → engine.receive',
+      'app/passes.ts:34-39',
+      'receive(trigger) {\n  if (this.host.closing()) throw new Error("Orchestrator is stopping") // :35\n  const result = this.host.engine.receive(trigger)                     // :36\n  if (result === "stored") this.request()                              // :37\n  return result\n}',
+      '第三跳。只有 "stored" 才 request()——duplicate / filtered 不会白白唤醒主 Session。host.engine 是 runtime.ts:157 构造的闭包 { receive: trigger => engine.receive(trigger), evaluateDue }，engine 来自 :137 的 new Engine(...)。',
+      'IN  Trigger\nOUT ReceiveResult + 可能触发 request()', 2, 'sync', ['chain4']),
+    S('s08','A',2,3,'repo.atomic 事务边界','Engine.receive = 唯一写入口',
+      'core/engine.ts:48 · app/runtime.ts:137,157',
+      'receive(trigger: Trigger): ReceiveResult {\n  return this.repo.atomic(() => this.intake.receive(trigger))\n}',
+      '第四跳，进入领域核心。Engine 的 27 个 public 方法里 26 个套 repo.atomic；这一条是整条链唯一的事务性写入口。跨聚合的所有写入都在这一个 SQLite 事务里完成或一起回滚。',
+      'IN  Trigger\nOUT 事务内的领域变更', 2, 'domain', ['chain5']),
+    S('s09','A',3,3,'去重 / scope 过滤','三种出口的分叉点',
+      'core/intake.ts:19-29 · sources/registry.ts:124-132 · sources/feishu.ts:54-59',
+      'if (!trigger.threads.length) throw new Error(...)\nif (this.repo.triggers.get(trigger.id)) return "duplicate"   // :23\nconst filter = this.options.scope.scope(trigger)             // :25\nif (!filter.listened) {\n  this.repo.triggers.save(trigger)\n  this.repo.triggers.saveDisposition(trigger.id, { filtered: {...} })\n  return "filtered"                                         // :28\n}',
+      'scope 判定发生在领域里，不在 Source 里：Source 侧只查 enabled(ctx)（feishu-loops.ts:91），「这个群该不该听」由 Intake 调 SourceRegistry.scope → feishuKind.scope 决定。注意 filtered 也存 trigger，留痕可审计。',
+      'IN  Trigger\nOUT duplicate / filtered / 继续', 3, 'branch'),
+    S('s10','A',3,3,'关联 · 扇出 · 排队','Intake 的全部落库动作',
+      'core/intake.ts:30-61 · core/model.ts:75-88 · core/part.ts:57-63',
+      'this.repo.triggers.save(trigger)                       // :30\nfor (const ref of trigger.threads) { /* :33-48 更新 Thread、收集 reached */ }\nfor (const [ticketId, ...] of reached) this.tickets.addInput(...) // :49-52\nthis.repo.triggers.saveDisposition(trigger.id, { fanout, context, at }) // :55\nif (!this.owners(trigger).length) this.queueForEval(trigger) // :58\nfor (const ticketId of fanout) this.tickets.wake(ticketId)   // :59\nthis.emit("trigger.received", {...})                          // :60\nreturn "stored"                                               // :61',
+      '第 :58 步是整条链最重要的分叉：owners() 即 followupOwners()（model.ts:75-88）。人的消息若已扇出到活工单且未被 handback / requeue / Eval 持有，就归那个工人决定、不进 Eval；主 Session 此时只能 stop。bot 消息与无人认领的才 queueForEval() 进 thread.pending。:60 的 emit 回到 runtime.ts:138-153 通知主 Session（观察旁路，不写领域状态）。',
+      'IN  Trigger\nOUT trigger + disposition + thread.pending / ticket.inputs', 3, 'domain'),
+    S('s11','A',3,2,"返回 'stored'",'同步链到此结束',
+      'core/intake.ts:61 → app/passes.ts:37 → sources/feishu-loops.ts:27',
+      'return "stored"   // intake.ts:61\n// 原路同步返回：engine → passes → sourceDeps → sourceContext → await',
+      '整条闭包链到 intake.receive 返回都是同步的，ReceiveResult 不是 Promise。此时消息已完整持久化（trigger + disposition + thread + 可能的 input），但还没被「理解」。await 的作用只是让调用方在返回后再推进读取游标。',
+      "IN  'stored'\nOUT await 完成，游标可推进", 2),
+    S('s12','B',2,2,'request() → pumpOnce()','异步起点',
+      'app/passes.ts:28,37,40-46,56-68 · core/engine.ts:75-85',
+      'request() { this.pump().then(...) }              // :40-46\npump()  { /* :56-62 合并并发：pumping / pumpAgain */ }\npumpOnce() {\n  this.host.effects.kick()        // :64\n  this.host.engine.evaluateDue()  // :67\n}',
+      'passes.ts:37 的 request() 是同步链与异步世界真正的分界。pump() 用 pumping / pumpAgain 合并并发调用；:58 在 !configured() || closing() 时直接返回，setup 未完成的消息排队等重启。start()（:28）还有 2 秒一次的兜底时钟。effects.kick() 用 queueMicrotask 派发持久化副作用。',
+      "IN  'stored'\nOUT effect 派发 + evaluateDue()", 3, 'async'),
+    S('s13','B',2,4,'evaluateDue → evals.start','时钟推进排队中的 Eval',
+      'core/engine.ts:75-85 · core/evals.ts:71-119',
+      'for (const thread of this.repo.threads.active())\n  if (thread.pending.length && !thread.evaluating)\n    this.repo.atomic(() => { this.evals.start(thread.key, policy) })  // engine.ts:83',
+      'evaluateDue() 做三件事：:77 处理超时 Eval（最多重排 2 次，evals.ts:60-69）、:78 暂停则停、:79-81 唤醒有未投递 Input 的已结束工单、:82-84 对排队中的 Thread 起 Eval。每个 Eval / 工单更新各占一个事务。',
+      'IN  thread.pending[]\nOUT thread.evaluating = Evaluation', 4, 'domain'),
+    S('s14','C',4,4,'policy.gate 准入','合成 Candidate',
+      'core/evals.ts:91-118 · policy.ts:170-210 · core/ports.ts:30-38',
+      'for (const trigger of triggers) {\n  const gate = policy.gate(trigger, thread, tickets)  // :96\n  if (!gate.admissible) { reasons.push(...); continue }\n  ... /* 取 strength 最高者 */\n}\nthread.evaluating = { id: evalId, triggerIds, primary, strength, actor, basis, deadline }\nthis.options.assessor.request(this.candidateOf(thread))   // :118',
+      '同一 Thread 上排队的 Trigger 合成一个 Eval。飞书准入在这里：名单内用户 + @/私聊 → explicit；名单外或纯观察消息走 admission table；bot 只在 bots 名单里作 inferred（policy.ts:170-187）。无 admissible → ignore（not_a_member / no_mention / admission_ignored）。:118 是跨域边界，从核心走向主 Session。',
+      'IN  Evaluation\nOUT Candidate → Assessor', 5, 'domain'),
+    S('s15','C',4,5,'assessor.request','候选卡投递到主 Session',
+      'app/assessment.ts:96-104 · app/runtime.ts:133 · app/sessions.ts:162 · app/delivery.ts:68-86',
+      'request(candidate) {\n  this.host.effects.enqueue("assessment", candidate.evalId,\n    { triggerId: candidate.triggers[0].id })   // assessment.ts:104\n}\n// handler :96-101 → candidateCard() → host.deliver()\n// runtime.ts:133  deliver = (id, text) => sessions.prompt(masterId, id, text, "steer")\n// :100  engine.candidateDelivered(evalId)  ← 此时才开始算 deadline',
+      'assessment effect 持久化在 SQLite 队列里，limit 为 paused ? 0 : 4。AgentDelivery.send() 按 requestId 幂等投递，Session 重启也不重复。deadline 从「主 Session 真的收到卡片」才开始算，避免忙等吃掉评估时间。',
+      'IN  Candidate\nOUT 主 Session 收到 candidate 卡片', 5, 'async'),
+    S('s16','C',5,1,'反向读飞书线程','第二次访问同一条消息',
+      'app/assessment.ts:139-174,183-220,225-270 · sources/feishu-read.ts:153-171',
+      'const context = await admissionContext(thread, commands, maxPages) // assessment.ts:155\n// feishu-read.ts:153-171  feishuThreadContext\nread: async (commands, trigger, part, cursor, config) => {\n  const resource = "feishu/" + trigger.id + "/" + part\n  const body = await feishuRead(commands, ref, resource, config.readPageSize)\n}',
+      'orchestrator_eval 的 seed() 用 lark 命令按 message / root / parent / thread 反读飞书，orchestrator_eval_read 可分页、可读图片。这不是入站的事件流，而是一次按需的反向读取；没有 topic thread 时回退到群内前后 5 条（feishu-read.ts:159-163）。',
+      'IN  trigger_id + resource\nOUT 有界线程窗口（≤ TRIGGER_CHARS 4000）', 1, 'async'),
+    S('s17','C',5,4,'route / eval_decide','主 Session 交回决策',
+      'app/tools/main.ts:88-107,127,214-222 · app/assessment.ts:272-279 · core/engine.ts:100',
+      '// explicit：orchestrator_route（main.ts:127）\nhost.engine.decide(item.trigger_id, { kind: "accept", ... })   // :97\n// inferred：orchestrator_eval_decide（main.ts:214-222）\nconst decision = this.host.engine.decide(triggerId,\n  { ...outcome, evalId: candidate.evalId })   // assessment.ts:277',
+      '两条回程：explicit 请求走 orchestrator_route（accept / attach / stop / ignore）；inferred 候选走 orchestrator_eval → orchestrator_eval_decide。evals.ts:131-156 校验防重复 accept、推断候选必须在 auto 模式且命中启用规则。',
+      'IN  AssessmentOutcome\nOUT Decision 事务', 6, 'domain'),
+    S('s18','C',4,4,'accept → Mandate','写 Decision + 建工单',
+      'core/evals.ts:282-339 · core/tickets.ts:37-56',
+      'const mandate = { strength, policyVersion, basis, actor, scope }\nconst decision = this.finish(thread, evaluation, { kind: "accept", mandate, ticketId })\nthis.tickets.create(ticketId, decision.id, mandate, evaluation, outcome, at) // evals.ts:314',
+      'decideEval()（:282-304）分 ignore / unavailable / stop / accept 四类。accept 在 :306-316 写 Mandate 并调 Tickets.create()；finish/record（:318-339）落 Decision、更新每个 Trigger 的 disposition、emit decision.recorded。stop 会调 tickets.end(..., "human", "stopped")。',
+      'IN  Outcome\nOUT Decision + Ticket + Assignment', 6, 'domain'),
+    S('s19','D',4,6,'executor.start','launch / delivery effects',
+      'core/tickets.ts:37-56 · executor/dsh.ts:232-235,264-268,270-350',
+      '// tickets.ts:45-54\nfor (const triggerId of triggerIds) { /* 收集 Trigger.channel 到 ticket.channels */ }\nticket = this.options.prepareTicket?.(ticket, outcome) ?? ticket  // → dsh.ts:238\nconst assignment = this.newAssignment(ticket)\nthis.repo.tickets.save(ticket)\nfor (...) this.subscribe(id, ref)          // :52 订阅 Thread ← 生命周期回环\nif (outcome.acknowledgement) this.replies.acknowledgeAccepted(...)  // :53\nthis.options.executor.start(this.require(id), assignment)           // :54',
+      ':52 的订阅是回环：从此该 Thread 上的新飞书消息会在 Intake 的 :38-46 命中 thread.subscriptions，变成工单 Input，不再进 Eval。执行侧全是持久化 effect：launch → 工人 Session、delivery → deliverInput() → sessions.prompt(workerSessionId, ...) 把 Trigger 作为 Input 注入（dsh.ts:329-343）。',
+      'IN  Ticket + Assignment\nOUT 工人 Session 读到消息卡片', 7, 'async'),
+    S('s20','D',6,4,'ack / report','工人回报 → Engine',
+      'app/tools/executor.ts:30-40 · core/engine.ts:135,239 · core/assignments.ts:99-134',
+      '// orchestrator_ack\nhost.engine.reply({ purpose: "acknowledgement", ticketId, triggerId, text })\n// orchestrator_report → engine.report(ticketId, WorkerReport)\n// assignments.ts:128-132  ready / dropped → tickets.end()',
+      '工人用 orchestrator_ack 回执原消息、orchestrator_report 报状态。report() 在 ready / dropped 时结束工单（:131-132）；attention 问题会经 Replies 排队；blocked / failed 会拦住自动 Input。主 Session 也可通过 orchestrator_reply 发 result / answer / attention。',
+      'IN  WorkerReport / ack\nOUT Reply 请求 / ticket.ended', 7, 'domain'),
+    S('s21','E',4,7,'Replies.reply → outbox.send','用出生时带的地址回信',
+      'core/engine.ts:135 · core/replies.ts:36-92 · app/outbox.ts:27-32',
+      '// replies.ts:84-86\nconst channel = request.purpose === "answer" ? trigger.channel\n  : asker?.channel ?? (ticket ? this.sourceChannel(ticket) : undefined)\nif (!channel) throw new UserError("noChannel")\nthis.options.outbox.send({ id, channel, text: request.text, kind: "reply", ticketId })',
+      'trigger.channel 就是 s03 里 feishuChannel() 生成的那个对象——消息绕了一整圈，用的还是自己出生时带的地址。Outbox.send 在 :29 对飞书做 IM 长度校验，:31 在同一个事务里写 receipt + enqueue("reply")。',
+      'IN  ReplyRequest\nOUT OutboundMessage + receipt(pending)', 8, 'domain'),
+    S('s22','E',7,7,'reply effect → deliver','持久化重试 + 通道复核',
+      'app/outbox.ts:24,39-51 · app/effects.ts:130-146 · sources/registry.ts:75-80,95-99',
+      'effects.handle("reply", (_p, id) => this.deliver(id),\n  { limit: () => host.paused() ? 0 : 1, retry: [5000, 300000] })  // :24\n// deliver() :43 source 启用 → :45 receipts.behind() 保序\n// :46 channelAllowed → feishu.ts:62-63 → feishuKind.scope 再查一次\n// :48 sources.send → registry.ts:95-99 → kind.channel.send',
+      'channelAllowed 会重查「这个群现在还收不收」，防止工单开了几天后群被移出配置还往里发。receipts.behind() 保证同一会话按序：前一条失败未达阈值时，后一条抛 Later 等待。真正的错误走 effects.ts:141 的指数退避（5s → 300s）。',
+      'IN  reply effect row\nOUT sources.send(receipt, commands)', 8, 'async'),
+    S('s23','E',7,0,'sendFeishu → 飞书','话题内回复 + 幂等键',
+      'sources/feishu-channel.ts:16-30 · sources/feishu.ts:61-65 · app/outbox.ts:50',
+      'const reply = ["im", "+messages-reply",\n  "--message-id", messageId, "--markdown", text,\n  "--reply-in-thread", "--idempotency-key", message.id]\ntry { await host.commands.lark(reply) }\ncatch (error) { if (gone(error)) return "gone"; throw error }\nreturn "sent"',
+      '--message-id 就是 s03 存下的 om_...，--reply-in-thread 让回信落在原消息话题下，--idempotency-key 用 message.id 保证重试不重复发。gone()（:16-17）只在飞书明确报 230011 / withdrawn / not found 时判永久失败；超时和崩溃都要重试。:50 落 receipt 状态。',
+      'IN  OutboundMessage\nOUT lark CLI 调用 → sent / channelGone', 9, 'async'),
+    S('s24','E',0,0,'用户看到回信','生命闭环完成',
+      'sources/feishu-channel.ts:19-30 · core/replies.ts:84 · sources/feishu-trigger.ts:8-9',
+      '// 回信地址链路\nfeishuChannel(chatId, messageId, direct)          // feishu-trigger.ts:8-9\n  → Trigger.channel → Ticket.channels[]           // tickets.ts:45-48\n  → Replies.answer(): trigger.channel              // replies.ts:84\n  → Outbox → sendFeishu --message-id              // feishu-channel.ts:20-24',
+      '从 feishuChannel() 生成地址到 --message-id 使用它，中间经过 Trigger、Ticket、Reply、receipt、effect 五种形态、两次 channelAllowed 校验，没有任何一处重新查飞书找地址。orchestrator_reply 在 main.ts:236 会 await sendReplies()（→ effects.idle("reply")），主 Session 要等回信真发出去才拿到工具结果。',
+      'IN  飞书话题回复\nOUT 生命闭环', 9),
+
+    /* follow-up only */
+    S('f10','A',3,6,'工单认领 → addInput','不进 Eval，直接给工人',
+      'core/intake.ts:49-52,58 · core/model.ts:75-88 · core/tickets.ts:234-245',
+      'for (const [ticketId, { ticket, context }] of reached)\n  this.tickets.addInput(ticket, { id, kind: "trigger", triggerId, at, human, ... }) // :50\nif (!this.owners(trigger).length) this.queueForEval(trigger) // :58 owners≠0 → 跳过\nfor (const ticketId of fanout) this.tickets.wake(ticketId)   // :59',
+      'followupOwners() 命中：这条人的消息已扇出到某个活工单，且没被 handback / requeue / Eval 持有 → 归该工单的工人决定。addInput()（tickets.ts:234-245）把消息压进 ticket.inputs / undelivered 并调 executor.deliver()；主 Session 此时只能 stop（evals.ts:148 leftToWorkers）。wake() 还能复活已结束但非人工停止的工单。',
+      'IN  Trigger（follow-up）\nOUT ticket.inputs[] + delivery effect', 7, 'branch'),
+
+    /* terminal branches */
+    S('x-dup','A',3,2,"返回 'duplicate'",'命运 1：重复事件',
+      'core/intake.ts:23 · app/passes.ts:37',
+      'if (this.repo.triggers.get(trigger.id)) return "duplicate"   // intake.ts:23\n// passes.ts:37  if (result === "stored") this.request()  → 不触发',
+      '三条读路径（实时流 / 历史补收 / 话题轮询）都靠 feishuTriggerId() 的确定性 ID 在这里汇合去重。重复事件不改任何状态、不唤醒主 Session、不产生回信。这就是「同一个 om_... 被读三遍也只处理一次」的实现。',
+      "IN  已存在的 trigger.id\nOUT 'duplicate'，立即结束", 2, 'branch'),
+    S('x-filt','A',3,2,"返回 'filtered'",'命运 2：不监听的群',
+      'core/intake.ts:25-29 · sources/feishu.ts:54-59 · sources/registry.ts:124-132',
+      'const filter = this.options.scope.scope(trigger)   // :25\nif (!filter.listened) {\n  this.repo.triggers.save(trigger)\n  this.repo.triggers.saveDisposition(trigger.id,\n    { filtered: { code: filter.reason }, fanout: [], at })\n  return "filtered"\n}',
+      'scope 由 SourceRegistry.scope → feishuKind.scope 判定：私聊看 directMessages、配置群看 chats[].listen、其他群看 otherChats。注意 filtered 仍会存 trigger + disposition（留痕可审计），只是不扇出、不评估、不回信。',
+      "IN  Trigger（未监听 scope）\nOUT 'filtered'，立即结束", 3, 'branch'),
+    S('x-end','A',2,2,'生命周期结束','无回信地址被使用',
+      'app/passes.ts:34-39',
+      'if (result === "stored") this.request()   // :37 只有 stored 才继续',
+      'Passes 只对 "stored" 调 request()，duplicate / filtered 在这里就结束了。Trigger.channel 里那个 om_... 地址从未被 Replies 使用。这条分支说明为什么「收到但没反应」在面板里依然可查。',
+      'IN  duplicate / filtered\nOUT 终点', 2, 'branch')
+  ];
+  var BY_ID = {}; STEPS.forEach(function (s) { BY_ID[s.id] = s; });
+
+  function seq(a, b) { var r = []; for (var i = a; i <= b; i++) r.push('s' + (i < 10 ? '0' : '') + i); return r; }
+  var FULL = seq(1, 24);
+  var SCENARIOS = [
+    { id: 'full', name: '新请求 → 工单 → 回信', desc: '默认全景：24 步走完整条链。名单内用户 @ 机器人 → explicit 准入 → 主 Session accept → 开工单 → 工人执行 → 回信回到原消息话题。',
+      steps: FULL },
+    { id: 'followup', name: '跟进消息（已有工单）', desc: '同一 Thread 上的人话，已扇出到活工单：followupOwners() 命中 → 不进 Eval、不评估，直接作为 Input 交给工人。主 Session 此时只能 stop。',
+      steps: seq(1, 9).concat(['f10', 's11', 's20', 's21', 's22', 's23', 's24']) },
+    { id: 'dup', name: '重复事件 duplicate', desc: '历史补收又读到实时流已存过的同一条 om_...：feishuTriggerId() 确定性 ID 在 intake.ts:23 命中，Passes 不 request，全程无副作用。',
+      steps: seq(1, 9).concat(['x-dup', 'x-end']) },
+    { id: 'filtered', name: '未监听群 filtered', desc: '消息来自没配置的群且 otherChats=none：Source 侧只查 enabled，真正的 scope 判定在 Intake 内。仍存 trigger + filtered disposition 留痕，但不扇出、不评估。',
+      steps: seq(1, 9).concat(['x-filt', 'x-end']) }
+  ];
+
+  var CHAIN = [
+    { id: 'chain1', at: 'sources/feishu-loops.ts:27', text: 'await ctx.receive(trigger)', note: '调用方入核（你写的 :31，当前工作树是 :27）' },
+    { id: 'chain2', at: 'app/source-context.ts:46', text: 'deps.receive(trigger)', note: '★ receive 唯一赋值点' },
+    { id: 'chain3', at: 'app/runtime.ts:161', text: 'passes.receive(trigger)', note: 'deps.receive 在这里赋值' },
+    { id: 'chain4', at: 'app/passes.ts:36', text: 'host.engine.receive(trigger)', note: '仅 stored 时 request()' },
+    { id: 'chain5', at: 'app/runtime.ts:157', text: 'engine.receive(trigger)', note: 'engine 闭包，来自 runtime.ts:137' },
+    { id: 'chain6', at: 'core/engine.ts:48', text: 'repo.atomic(() => intake.receive(trigger))', note: 'core/intake.ts:19 才落领域对象' }
+  ];
+
+  /* ---------- state ---------- */
+  var scenario = SCENARIOS[0];
+  var steps = scenario.steps.map(function (id) { return BY_ID[id]; });
+  var cur = 0, playing = false, timer = null;
+  var SPEEDS = [0.5, 1, 2], speedIdx = 1;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+
+  /* ---------- svg layout ---------- */
+  var W = 1180, HEAD = 66, ROW = 54, LANE_W = 138, X0 = 96;
+  var LX = function (i) { return X0 + i * LANE_W; };
+  function rowsFor(list) {
+    var rows = [], last = null;
+    list.forEach(function (s, i) {
+      if (s.phase !== last) { rows.push({ type: 'band', label: PHASES[s.phase], phase: s.phase }); last = s.phase; }
+      if (s.id === 's12' || s.id === 'f10') rows.push({ type: 'div', label: s.id === 's12'
+        ? '↑↑ 同步闭包链到此结束 · 以下由 request() 触发的 pass 与 effect 队列异步进行'
+        : '↑↑ 分叉：owners(trigger) ≠ 0，跳过 Eval，直接交给已有工单的工人' });
+      rows.push({ type: 'step', step: s, n: i + 1 });
+    });
+    return rows;
+  }
+  var H = 0, stepY = {};
+
+  function buildSvg() {
+    var rows = rowsFor(steps);
+    H = HEAD + rows.length * ROW + 26;
+    var p = [];
+    // lifelines
+    LANES.forEach(function (l, i) {
+      p.push('<line class="lifeline" x1="' + LX(i) + '" y1="' + (HEAD - 6) + '" x2="' + LX(i) + '" y2="' + (H - 18) + '"/>');
+    });
+    // lane headers
+    LANES.forEach(function (l, i) {
+      var x = LX(i);
+      p.push('<rect class="lane-head" x="' + (x - 62) + '" y="9" width="124" height="44" rx="8"/>');
+      p.push('<text class="lane-name" x="' + x + '" y="28">' + esc(l.name) + '</text>');
+      p.push('<text class="lane-sub" x="' + x + '" y="43">' + esc(l.sub) + '</text>');
+    });
+    // rows
+    rows.forEach(function (r, ri) {
+      var y = HEAD + ri * ROW + ROW / 2;
+      if (r.type === 'band') {
+        p.push('<rect class="band" x="14" y="' + (y - 12) + '" width="' + (W - 28) + '" height="24" rx="6"/>');
+        p.push('<text class="band-label" x="26" y="' + (y + 4) + '">' + esc(r.label) + '</text>');
+      } else if (r.type === 'div') {
+        p.push('<rect class="band-div" x="14" y="' + (y - 12) + '" width="' + (W - 28) + '" height="24" rx="6"/>');
+        p.push('<text class="band-label-div" x="26" y="' + (y + 4) + '">' + esc(r.label) + '</text>');
+      } else {
+        stepY[r.step.id] = y;
+        var s = r.step, from = LX(s.from), to = LX(s.to), n = r.n;
+        var g = '<g class="step" data-id="' + s.id + '" data-n="' + n + '">';
+        g += '<circle class="halo" cx="' + to + '" cy="' + y + '" r="17" fill="none"/>';
+        if (s.from === s.to) {
+          g += '<circle class="self-dot" cx="' + from + '" cy="' + y + '" r="11"/>';
+          g += '<text class="self-num" x="' + from + '" y="' + (y + 3.5) + '">' + n + '</text>';
+          var right = s.from <= 4;
+          g += '<text class="lbl" x="' + (from + (right ? 18 : -18)) + '" y="' + (y - 9) + '" text-anchor="' + (right ? 'start' : 'end') + '">' + esc(s.label) + '</text>';
+        } else {
+          var dir = to > from ? 1 : -1;
+          var x1 = from + dir * 12, x2 = to - dir * 12;
+          g += '<line class="arrow" x1="' + x1 + '" y1="' + y + '" x2="' + x2 + '" y2="' + y + '"/>';
+          // Arrowhead drawn inline (not a marker) so theme + active state can style it via CSS.
+          var tipX = to - dir * 2, baseX = to - dir * 13;
+          g += '<polygon class="tip" points="' + tipX + ',' + y + ' ' + baseX + ',' + (y - 5.5) + ' ' + baseX + ',' + (y + 5.5) + '"/>';
+          g += '<circle class="endpoint" cx="' + from + '" cy="' + y + '" r="3.2"/>';
+          var mid = (x1 + x2) / 2;
+          g += '<text class="lbl" x="' + mid + '" y="' + (y - 9) + '" text-anchor="middle">' + esc(s.label) + '</text>';
+          g += '<text class="idx" x="' + mid + '" y="' + (y + 15) + '" text-anchor="middle">' + n + '</text>';
+        }
+        g += '</g>';
+        p.push(g);
+      }
+    });
+    p.push('<circle id="token" cx="' + LX(steps[0].from) + '" cy="' + (stepY[steps[0].id] || HEAD + ROW) + '" r="6" opacity="0"/>');
+    $('svg').setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    $('svg').innerHTML = p.join('');
+    Array.prototype.forEach.call($('svg').querySelectorAll('.step'), function (g) {
+      g.addEventListener('click', function () { var n = parseInt(g.getAttribute('data-n'), 10); pause(); go(n - 1); });
+    });
+  }
+
+  /* ---------- token animation ---------- */
+  var tokenRAF = null;
+  function moveToken(s) {
+    var t = $('token'); if (!t) return;
+    if (tokenRAF) cancelAnimationFrame(tokenRAF);
+    var y = stepY[s.id], from = LX(s.from), to = LX(s.to), start = null;
+    t.setAttribute('opacity', '1'); t.setAttribute('cy', y);
+    if (s.from === s.to) {
+      t.setAttribute('cx', from);
+      var pulse = 0;
+      (function tick() {
+        pulse += 0.12;
+        t.setAttribute('r', String(6 + Math.sin(pulse) * 2));
+        tokenRAF = requestAnimationFrame(tick);
+      })();
+      return;
+    }
+    t.setAttribute('r', '6');
+    function frame(ts) {
+      if (start === null) start = ts;
+      var k = Math.min(1, (ts - start) / 620);
+      var e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      t.setAttribute('cx', String(from + (to - from) * e));
+      if (k < 1) tokenRAF = requestAnimationFrame(frame);
+    }
+    tokenRAF = requestAnimationFrame(frame);
+  }
+
+  /* ---------- render right column ---------- */
+  function renderDetail() {
+    var s = steps[cur], n = cur + 1;
+    var modeLabel = { sync: '同步', async: '异步 / effect', domain: '事务内', branch: '分叉 / 终点' }[s.mode];
+    var badges = '<span class="badge ' + s.mode + '">' + modeLabel + '</span>' +
+      '<span class="badge">' + esc(PHASES[s.phase]) + '</span>' +
+      '<span class="badge">第 ' + n + ' / ' + steps.length + ' 步</span>';
+    if (s.extra && s.extra.length) badges += '<span class="badge domain">闭包链第 ' + (CHAIN.findIndex(function(c){return c.id===s.extra[0];}) + 1) + ' 跳</span>';
+    var html = '<h3>当前这一步</h3><div class="body">';
+    html += '<div class="dhead"><div class="dnum">' + n + '</div><div><p class="dtitle">' + esc(s.title) + '</p><div class="dphase">' + esc(s.label) + ' · ' + esc(PHASES[s.phase]) + '</div></div></div>';
+    html += '<div class="badges">' + badges + '</div>';
+    html += '<div class="src">' + esc(s.src) + '</div>';
+    html += '<pre>' + esc(s.code) + '</pre>';
+    html += '<p class="dtext">' + esc(s.text) + '</p>';
+    html += '<div class="io">' + esc(s.io).replace(/\n/g, '<br>') + '</div>';
+    html += '</div>';
+    $('detail').innerHTML = html;
+  }
+  function renderTimeline() {
+    $('timeline').innerHTML = steps.map(function (s, i) {
+      var cls = i === cur ? ' on' : (i < cur ? ' done' : '');
+      return '<span class="tl' + cls + '" data-i="' + i + '" title="' + esc(s.title) + '">' + (i + 1) + ' · ' + esc(s.label) + '</span>';
+    }).join('');
+    Array.prototype.forEach.call($('timeline').children, function (el) {
+      el.addEventListener('click', function () { pause(); go(parseInt(el.getAttribute('data-i'), 10)); });
+    });
+  }
+  function renderShapes() {
+    var s = steps[cur];
+    $('shapes').innerHTML = SHAPES.map(function (sh, i) {
+      return '<div class="shape' + (i === s.shape ? ' on' : '') + '"><b>' + esc(sh[0]) + '</b><span>' + esc(sh[1]) + '</span></div>';
+    }).join('');
+    var on = $('shapes').querySelector('.shape.on');
+    if (on) $('shapes').scrollLeft = Math.max(0, on.offsetLeft - 100);
+  }
+  function renderChain() {
+    var s = steps[cur];
+    var active = (s.extra || []).slice();
+    if (s.id === 's08') active.push('chain6');
+    $('chain').innerHTML = '<ol>' + CHAIN.map(function (c) {
+      return '<li class="' + (active.indexOf(c.id) >= 0 ? 'on' : '') + '"><span>' + esc(c.at) + '</span> → ' + esc(c.text) + '<em>' + esc(c.note) + '</em></li>';
+    }).join('') + '</ol>';
+    $('chainNote').innerHTML = '复核结论与你给的一致：<b>只有一个赋值点</b>（<code>app/source-context.ts:46</code>），其余都是转接；没有事件总线、没有接口查找。行号 3 处微移：<code>feishu-loops.ts:31 → :27</code>、<code>source-context.ts:36 起 → :36 是 return、:46 才赋值</code>、<code>feishu.ts:130-136 → :130-139</code>。旁路 <code>runtime.ts:194</code> 的 <code>Runtime.receive</code> 从第 3 跳起同路。';
+  }
+  function renderSvgState() {
+    Array.prototype.forEach.call($('svg').querySelectorAll('.step'), function (g) {
+      var n = parseInt(g.getAttribute('data-n'), 10);
+      g.setAttribute('class', 'step' + (n === cur + 1 ? ' active' : (n < cur + 1 ? ' done' : ' future')));
+    });
+    var s = steps[cur], y = stepY[s.id];
+    var box = $('diagram');
+    var scale = $('svg').getBoundingClientRect().width / W;
+    var target = y * scale - box.clientHeight / 2;
+    box.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+  }
+  function renderAll() {
+    $('counter').textContent = (cur + 1) + ' / ' + steps.length;
+    $('progress').style.width = ((cur + 1) / steps.length * 100) + '%';
+    $('prev').disabled = cur === 0;
+    $('next').disabled = cur === steps.length - 1;
+    renderSvgState(); renderDetail(); renderTimeline(); renderShapes(); renderChain(); moveToken(steps[cur]);
+  }
+
+  /* ---------- playback ---------- */
+  function go(i) { cur = Math.max(0, Math.min(steps.length - 1, i)); renderAll(); }
+  function pause() { playing = false; if (timer) clearTimeout(timer); timer = null; $('play').textContent = '▶ 播放'; }
+  function tick() {
+    if (!playing) return;
+    if (cur >= steps.length - 1) { pause(); return; }
+    go(cur + 1);
+    timer = setTimeout(tick, 2100 / SPEEDS[speedIdx]);
+  }
+  function play() {
+    if (cur >= steps.length - 1) cur = 0;
+    playing = true; $('play').textContent = '❚❚ 暂停';
+    renderAll();
+    timer = setTimeout(tick, 2100 / SPEEDS[speedIdx]);
+  }
+  $('play').addEventListener('click', function () { playing ? pause() : play(); });
+  $('prev').addEventListener('click', function () { pause(); go(cur - 1); });
+  $('next').addEventListener('click', function () { pause(); go(cur + 1); });
+  $('restart').addEventListener('click', function () { pause(); go(0); });
+  $('speed').addEventListener('click', function () {
+    speedIdx = (speedIdx + 1) % SPEEDS.length;
+    $('speed').textContent = SPEEDS[speedIdx] + '×';
+    if (playing) { clearTimeout(timer); timer = setTimeout(tick, 2100 / SPEEDS[speedIdx]); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft') { pause(); go(cur - 1); }
+    else if (e.key === 'ArrowRight') { pause(); go(cur + 1); }
+    else if (e.key === ' ') { e.preventDefault(); playing ? pause() : play(); }
+    else if (e.key === 'r' || e.key === 'R') { pause(); go(0); }
+  });
+
+  /* ---------- scenarios ---------- */
+  function chooseScenario(sc) {
+    pause();
+    scenario = sc;
+    steps = sc.steps.map(function (id) { return BY_ID[id]; });
+    cur = 0;
+    $('scenarioDesc').textContent = sc.desc;
+    Array.prototype.forEach.call($('scenarios').children, function (el) {
+      el.className = 'chip' + (el.getAttribute('data-id') === sc.id ? ' on' : '');
+    });
+    buildSvg(); renderAll();
+    $('diagram').scrollTop = 0;
+  }
+  $('scenarios').innerHTML = SCENARIOS.map(function (s) {
+    return '<span class="chip" data-id="' + s.id + '">' + esc(s.name) + '</span>';
+  }).join('');
+  Array.prototype.forEach.call($('scenarios').children, function (el) {
+    el.addEventListener('click', function () {
+      var id = el.getAttribute('data-id');
+      chooseScenario(SCENARIOS.filter(function (s) { return s.id === id; })[0]);
+    });
+  });
+
+  chooseScenario(SCENARIOS[0]);
+})();
+</script>
+</body>
+</html>

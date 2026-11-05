@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engine / Runtime UML · dsh-superagent-prototype</title>
+<style>
+:root{
+  --bg:#f5f6fb; --card:#ffffff; --card2:#fafbff; --ink:#101830; --ink2:#2a3350;
+  --muted:#5f6980; --line:#dfe2ec; --accent:#4a55e8; --accent-soft:#eef0ff;
+  --blue:#185fa5; --blue-soft:#e6f1fb; --green:#0f6e56; --green-soft:#e1f5ee;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+html[data-theme="dark"]{
+  --bg:#10121b; --card:#171a26; --card2:#1c2030; --ink:#eef1fb; --ink2:#c9d0e6;
+  --muted:#98a1bb; --line:#2b3042; --accent:#8b93ff; --accent-soft:#1f2440;
+  --blue:#85b7eb; --blue-soft:#152438; --green:#5dcaa5; --green-soft:#123027;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:28px 20px 60px;background:var(--bg);color:var(--ink);font:14px/1.65 var(--sans)}
+.wrap{max-width:1180px;margin:0 auto}
+header.top{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:24px}
+h1{font-size:30px;letter-spacing:-.025em;margin:0 0 6px;font-weight:700}
+.sub{color:var(--muted);font-size:13.5px;margin:0}
+.sub code{font:12.5px var(--mono);background:var(--card2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.note{margin:14px 0 0;font-size:12.5px;color:var(--muted);border-left:3px solid var(--accent);padding-left:12px}
+h2{font-size:20px;margin:36px 0 6px;letter-spacing:-.015em}
+h2 .n{display:inline-grid;place-items:center;width:24px;height:22px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font:600 12px var(--mono);margin-right:8px;vertical-align:2px}
+.lead{color:var(--muted);font-size:13px;margin:0 0 18px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 22px;font-size:12px;color:var(--muted)}
+.legend b{color:var(--ink2);font-weight:600}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:16px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card>h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--card2);font-weight:600}
+.card .body{padding:12px 14px}
+ul.clean{list-style:none;margin:0;padding:0}
+ul.clean li{font:12.5px/1.75 var(--mono);color:var(--ink2);padding:2px 0;border-bottom:1px dashed var(--line)}
+ul.clean li:last-child{border-bottom:0}
+ul.clean li .k{color:var(--accent)}
+ul.clean li .src{color:var(--muted);float:right;font-size:11.5px}
+.uml{border:1.5px solid var(--accent);border-radius:12px;overflow:hidden;background:var(--card)}
+.uml .head{background:var(--accent-soft);padding:12px 16px;border-bottom:1.5px solid var(--accent)}
+.uml .stereo{font:11.5px var(--mono);color:var(--accent);letter-spacing:.04em}
+.uml .head h3{margin:2px 0 0;font-size:22px;letter-spacing:-.02em;font-weight:700}
+.uml .head .at{font:11.5px var(--mono);color:var(--muted)}
+.uml .comp{border-top:1px solid var(--line);padding:10px 16px 12px}
+.uml .comp:first-of-type{border-top:0}
+.uml .comp h4{margin:0 0 6px;font:600 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.uml .grp{margin:8px 0 3px;font:600 11px var(--mono);color:var(--accent)}
+.uml .line{font:12px/1.62 var(--mono);color:var(--ink2);white-space:pre-wrap;word-break:break-word}
+.uml .line .p{color:var(--green)}
+.uml .line .q{color:var(--muted)}
+.uml.blue{border-color:var(--blue)}
+.uml.blue .head{background:var(--blue-soft);border-bottom-color:var(--blue)}
+.uml.blue .stereo,.uml.blue .grp{color:var(--blue)}
+.strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:16px 0 0}
+.chip{background:var(--blue-soft);border:1px solid var(--blue);color:var(--blue);border-radius:8px;padding:8px 6px;text-align:center;font:11.5px var(--mono);word-break:break-word}
+table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--card2);font:600 11px var(--mono);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+tr:last-child td{border-bottom:0}
+td code{font:12px var(--mono);color:var(--ink2)}
+td .src{font:11.5px var(--mono);color:var(--muted)}
+pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;font:12px/1.7 var(--mono);color:var(--ink2)}
+.kbd{font:11.5px var(--mono);background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:1px 5px}
+footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}.strip{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>Engine / Runtime UML</h1>
+  <p class="sub">dsh-superagent-prototype · <code>src/core/engine.ts:24</code> · <code>src/app/runtime.ts:59</code> · <code>src/index.ts:21</code></p>
+  <p class="note">Engine 是零 I/O 的领域核心（唯一事务入口），Runtime 是唯一知道 SQLite / Cordis / GitHub / 飞书的组合根。二者之间隔着 <code>core/ports.ts</code> 的 6 个接口。本页自包含，可离线打开；主题跟随宿主 Appearance，无宿主时跟随系统。</p>
+  <p class="cross" style="margin-top:10px;font-size:12.5px;color:var(--muted)">Engine 内部 5 个 Part 与 Repositories 的 UML 见 <a href="parts-uml.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent)">parts-uml.html</a> · 可编辑版 <a href="PARTS-UML.md" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent)">PARTS-UML.md</a>。</p>
+</header>
+
+<div class="legend">
+  <span><b>实线空心三角</b> 继承 / 泛化</span>
+  <span><b>虚线空心三角</b> 实现接口</span>
+  <span><b>实心菱形</b> 组合（同生命周期）</span>
+  <span><b>虚线箭头</b> 依赖 / 类型投影</span>
+  <span><b>+ / -</b> public / private</span>
+</div>
+
+<h2><span class="n">1</span>Engine 类图</h2>
+<p class="lead">单事务入口：27 个 public 方法中 26 个包在 <code>repo.atomic()</code> 里；唯一例外是只读的 <code>candidate()</code>（engine.ts:90）。</p>
+<div class="grid">
+  <div class="uml">
+    <div class="head">
+      <div class="stereo">«class» · 单一事务入口 · src/core/</div>
+      <h3>Engine</h3>
+      <div class="at">src/core/engine.ts:24 · constructor(options: EngineOptions) :31</div>
+    </div>
+    <div class="comp">
+      <h4>attributes · private readonly</h4>
+      <div class="line">- options : EngineOptions            <span class="q">part.ts:7</span></div>
+      <div class="line">- repo : Repositories</div>
+      <div class="line">- replies : Replies</div>
+      <div class="line">- tickets : Tickets</div>
+      <div class="line">- assignments : Assignments</div>
+      <div class="line">- evals : Evals</div>
+      <div class="line">- intake : Intake</div>
+    </div>
+    <div class="comp">
+      <h4>operations · 27 public · 按调用方分组</h4>
+      <div class="grp">sources · engine.ts:48-62</div>
+      <div class="line">+ receive(trigger): ReceiveResult</div>
+      <div class="line">+ bindThread(ticketId, thread, own): Ticket</div>
+      <div class="line">+ threadClosed(thread, outcome, at): void</div>
+      <div class="grp">clock / main session · :75-140</div>
+      <div class="line">+ evaluateDue(): void</div>
+      <div class="line">+ candidate(triggerId): Candidate | undefined  <span class="q">唯一不走 atomic</span></div>
+      <div class="line">+ decide(triggerId, outcome): Decision</div>
+      <div class="line">+ attach(ticketId, triggerId, note?): Ticket</div>
+      <div class="line">+ requestStatus(ticketId): boolean</div>
+      <div class="line">+ reply(request): Reply</div>
+      <div class="line">+ candidateDelivered(evalId): void</div>
+      <div class="grp">people / settings · :145-166, :255</div>
+      <div class="line">+ reevaluate / dismiss / unsubscribe</div>
+      <div class="line">+ stopTicket(ticketId, reason?): Ticket</div>
+      <div class="line">+ retryTicket(ticketId): Ticket</div>
+      <div class="line">+ policyChanged(from, to, effects?): void</div>
+      <div class="grp">executor · :174-245</div>
+      <div class="line">+ assignmentStarted / inputsDelivered / inputsRead</div>
+      <div class="line">+ turnEnded / deliveryFailed / markUnrelated</div>
+      <div class="line">+ followForContext / note / handback</div>
+      <div class="line">+ report(ticketId, report): Ticket</div>
+      <div class="line">+ assignmentInterrupted(ticketId, assignmentId)</div>
+    </div>
+  </div>
+  <div class="stack">
+    <div class="card">
+      <h3>«abstract» EnginePart · part.ts:26</h3>
+      <div class="body">
+        <ul class="clean">
+          <li><span class="k">#</span> repo : Repositories</li>
+          <li><span class="k">#</span> now() / policy()</li>
+          <li><span class="k">#</span> emit(type, data)</li>
+          <li><span class="k">#</span> require(ticketId)</li>
+          <li><span class="k">#</span> thread(ref) / owners()</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <h3>5 个子类 · 组合于 Engine ◆—</h3>
+      <div class="body">
+        <ul class="clean">
+          <li>Intake <span class="src">intake.ts:16</span></li>
+          <li>Evals <span class="src">evals.ts:27</span></li>
+          <li>Tickets <span class="src">tickets.ts:29</span></li>
+          <li>Assignments <span class="src">assignments.ts:30</span></li>
+          <li>Replies <span class="src">replies.ts:26</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <h3>5 个 Pick&lt;Engine,…&gt; 角色接口 · :261-269</h3>
+      <div class="body">
+        <ul class="clean">
+          <li>EngineForSources <span class="src">3 方法</span></li>
+          <li>EngineForMainSession <span class="src">7</span></li>
+          <li>EngineForPeople <span class="src">5</span></li>
+          <li>EngineForSettings <span class="src">1</span></li>
+          <li>EngineForExecutor <span class="src">11</span></li>
+        </ul>
+        <p style="margin:8px 0 0;font-size:12px;color:var(--muted)">是类型投影，不是 Engine 实现的接口；调用方拿到的是编译期收窄的窄接口。</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="strip">
+  <div class="chip">Repositories<br>ports.ts:106</div>
+  <div class="chip">Policy<br>ports.ts:17</div>
+  <div class="chip">SourceScope<br>ports.ts:12</div>
+  <div class="chip">Assessor<br>ports.ts:49</div>
+  <div class="chip">Executor<br>ports.ts:59</div>
+  <div class="chip">Outbox<br>ports.ts:76</div>
+</div>
+
+<h2><span class="n">2</span>Runtime 类图</h2>
+<p class="lead">组合根与生命周期管理器。<code>extends Service</code>（Cordis）、<code>implements SourceHost</code>（host.ts:23），在构造函数里装配 12 个组件并 1:1 持有 Engine。</p>
+<div class="grid">
+  <div class="uml blue">
+    <div class="head">
+      <div class="stereo">«class» · 组合根 / 生命周期 · src/app/</div>
+      <h3>Runtime</h3>
+      <div class="at">src/app/runtime.ts:59 · extends Service · implements SourceHost</div>
+    </div>
+    <div class="comp">
+      <h4>attributes · readonly</h4>
+      <div class="line">+ store : Store · setup : Setup · prompts : Prompts</div>
+      <div class="line">+ effects : Effects · sources : SourceRegistry</div>
+      <div class="line">+ commands : Commands · sessions : Sessions</div>
+      <div class="line">+ settings : Settings · executor : DshExecutor</div>
+      <div class="line">+ assessor : MasterAssessor · outbox : Outbox</div>
+      <div class="line">+ engine : Engine · passes : Passes</div>
+      <div class="line">+ ready : Promise&lt;void&gt; · masterId : string</div>
+      <div class="line">- board · runtimeHealth · sourceLinks · stopped</div>
+      <div class="line">- disposers · releaseLock · closingFlag · stopping</div>
+      <div class="line">- sourceDeps · toolHost · quiet : number</div>
+    </div>
+    <div class="comp">
+      <h4>operations</h4>
+      <div class="grp">constructor · :87-168</div>
+      <div class="line">+ constructor(ctx: Context, machine: Machine, restart)</div>
+      <div class="grp">source host · :176-197</div>
+      <div class="line">+ context(kind): SourceContext · configured(): boolean</div>
+      <div class="line">+ links(): LinkTarget · ticketEnvironment(ticket)</div>
+      <div class="line">+ checkSetup() · receive(trigger): ReceiveResult</div>
+      <div class="line">+ idle() · pump() · sendReplies()</div>
+      <div class="grp">getters · :173-182</div>
+      <div class="line">+ health / lifetime / deployment</div>
+      <div class="line">+ setupProblem / feishuProblem</div>
+      <div class="grp">lifecycle · :198-250</div>
+      <div class="line">- closing() · paused() · initialize() · httpHost()</div>
+      <div class="line">+ stop(): Promise&lt;void&gt;   <span class="q">幂等</span></div>
+      <div class="line">- shutdown(): Promise&lt;void&gt;</div>
+    </div>
+  </div>
+  <div class="stack">
+    <div class="card">
+      <h3>继承 / 实现</h3>
+      <div class="body">
+        <ul class="clean">
+          <li>Service <span class="src">@deepseek-ai/cordis</span></li>
+          <li>SourceHost <span class="src">sources/host.ts:23</span></li>
+          <li>Context.orchestrator <span class="src">runtime.ts:47</span></li>
+        </ul>
+        <p style="margin:8px 0 0;font-size:12px;color:var(--muted)">module augmentation 把宿主以 SourceHost 暴露给 Source 插件。</p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>组合的 12 个组件</h3>
+      <div class="body">
+        <ul class="clean">
+          <li>Store · Setup · Prompts</li>
+          <li>Effects · SourceRegistry</li>
+          <li>Commands · Sessions</li>
+          <li>Settings · DshExecutor</li>
+          <li>MasterAssessor · Outbox</li>
+          <li>Passes</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <h3>生命周期顺序</h3>
+      <div class="body">
+        <ul class="clean">
+          <li>1 锁 stateDir · :90-93</li>
+          <li>2 new 12 组件 + Engine · :97-160</li>
+          <li>3 ready = initialize() · :167</li>
+          <li>4 HTTP / setup / sessions</li>
+          <li>5 resume · start · effects</li>
+          <li>6 stop() → abort → drain</li>
+          <li>7 flush → close DB → 放锁</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="n">3</span>端口装配 · runtime.ts:137</h2>
+<p class="lead">Engine 只认接口；Runtime 在 <code>new Engine({...})</code> 时把具体实现一次性注入。这是六边形架构在本仓库的落点。</p>
+<table>
+  <thead><tr><th>core/ports.ts 接口</th><th>定义</th><th>Runtime 注入的实现</th><th>声明位置</th></tr></thead>
+  <tbody>
+    <tr><td><code>Repositories</code></td><td class="src">ports.ts:106</td><td><code>Store</code>（<code>repo: store</code>）</td><td class="src">app/store.ts:51 · implements Repositories</td></tr>
+    <tr><td><code>Policy</code></td><td class="src">ports.ts:17</td><td><code>settingsPolicy(store.settings(), sources)</code></td><td class="src">policy.ts · runtime.ts:136</td></tr>
+    <tr><td><code>SourceScope</code></td><td class="src">ports.ts:12</td><td><code>SourceRegistry</code></td><td class="src">sources/registry.ts:13 · implements SourceScope</td></tr>
+    <tr><td><code>Assessor</code></td><td class="src">ports.ts:49</td><td><code>MasterAssessor</code></td><td class="src">app/assessment.ts:89 · implements Assessor</td></tr>
+    <tr><td><code>Executor</code></td><td class="src">ports.ts:59</td><td><code>DshExecutor</code></td><td class="src">executor/dsh.ts:207 · implements Executor</td></tr>
+    <tr><td><code>Outbox</code></td><td class="src">ports.ts:76</td><td><code>app/Outbox</code></td><td class="src">app/outbox.ts:22 · implements OutboxPort</td></tr>
+  </tbody>
+</table>
+<p class="note">另有 <code>MemoryRepositories</code>（<code>core/memory.ts:10</code>）实现同一个 <code>Repositories</code> —— 测试用内存实现，是「核心与存储可替换」的直接证据。</p>
+<pre>new Engine({
+  repo: store,                       // Store implements Repositories
+  scope: sources,                    // SourceRegistry implements SourceScope
+  policy,                            // () =&gt; settingsPolicy(store.settings(), sources)
+  assessor, executor, outbox,
+  prepareTicket: (ticket, outcome) =&gt; executor.prepare(ticket, outcome),
+  emit: event =&gt; { /* 主 Session 通知 / followup 转发 / PR 结束通告 */ }
+})                                   // src/app/runtime.ts:137</pre>
+
+<h2><span class="n">4</span>关系清单</h2>
+<table>
+  <thead><tr><th>UML 关系</th><th>从</th><th>到</th><th>证据</th></tr></thead>
+  <tbody>
+    <tr><td>泛化（实线空心三角）</td><td><code>EnginePart</code></td><td>Intake / Evals / Tickets / Assignments / Replies</td><td class="src">part.ts:26 · 各子类文件首行</td></tr>
+    <tr><td>泛化</td><td><code>Service</code> (cordis)</td><td><code>Runtime</code></td><td class="src">runtime.ts:59</td></tr>
+    <tr><td>实现（虚线空心三角）</td><td><code>Runtime</code></td><td><code>SourceHost</code></td><td class="src">runtime.ts:59 · host.ts:23</td></tr>
+    <tr><td>实现</td><td>Store / SourceRegistry / MasterAssessor / DshExecutor / Outbox</td><td>core/ports.ts 的 5 个接口</td><td class="src">见第 3 节表格</td></tr>
+    <tr><td>组合（实心菱形）</td><td><code>Runtime</code></td><td><code>Engine</code> + 12 个组件</td><td class="src">runtime.ts:97-160</td></tr>
+    <tr><td>组合</td><td><code>Engine</code></td><td>5 个 EnginePart</td><td class="src">engine.ts:32-37</td></tr>
+    <tr><td>依赖（虚线箭头）</td><td><code>Engine</code></td><td>6 个端口接口</td><td class="src">part.ts:7 · engine.ts 各方法体</td></tr>
+    <tr><td>类型投影（虚线箭头）</td><td><code>Engine</code></td><td>5 个 <code>Pick&lt;Engine,…&gt;</code></td><td class="src">engine.ts:261-269</td></tr>
+  </tbody>
+</table>
+
+<h2><span class="n">5</span>读图要点</h2>
+<table>
+  <thead><tr><th>#</th><th>结论</th><th>依据</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>核心零 I/O：<code>src/core/</code> 不 import <code>src/app/</code>、<code>node:fs</code>、SQLite 或网络库</td><td class="src">engine.ts:1-10 的 import 列表</td></tr>
+    <tr><td>2</td><td>单一事务门：所有写操作经 <code>Engine.xxx()</code> → <code>repo.atomic(() ⇒ part.xxx())</code></td><td class="src">engine.ts 26/27 个方法体</td></tr>
+    <tr><td>3</td><td>编译期权限边界：调用方拿到 <code>Pick&lt;&gt;</code> 窄接口而非整个 Engine</td><td class="src">engine.ts:261-269</td></tr>
+    <tr><td>4</td><td>副作用外置：Engine 只发领域事件 / 排队，翻译通知的是 Runtime 的 emit 回调</td><td class="src">runtime.ts:138-150</td></tr>
+    <tr><td>5</td><td>生命周期只在 Runtime：目录锁、DB、setup、HTTP、agent 取消、flush、放锁</td><td class="src">runtime.ts:87-250</td></tr>
+    <tr><td>6</td><td>与课件 UML 目录的差异：<code>assets/uml.js</code> 的 engine/runtime 是精简版（3 字段 / 5 方法），本页是完整版</td><td class="src">assets/uml.js</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  Engine / Runtime UML · 源码基准 <code>dsh-superagent-prototype</code> · 完整可编辑 Mermaid 版见同目录 <code>ENGINE-RUNTIME-UML.md</code> · 五个 Part 与 Repositories 见 <a href="parts-uml.html" style="color:var(--accent)">parts-uml.html</a> · 主题跟随宿主 Appearance，宿主未发布时跟随系统。
+  <br><span style="color:var(--muted)">注：Shan 预览用 <code>srcdoc</code> 沙箱，上面的相对链接在那里不可跳转；请从同目录直接打开另一份文件（<code>file://</code> 下正常）。</span>
+</footer>
+</div>
+<script>
+(function () {
+  try {
+    var hint = window.__SHAN_THEME__ || window.WAY2SA_PARENT_THEME;
+    var q = window.matchMedia('(prefers-color-scheme: dark)');
+    function apply() {
+      var t = (hint === 'dark' || hint === 'light') ? hint : (q.matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+      document.documentElement.style.colorScheme = t;
+    }
+    apply();
+    if (q.addEventListener) q.addEventListener('change', apply);
+    window.addEventListener('message', function (e) {
+      var d = e.data;
+      if (!d) return;
+      var v = d.shanTheme || d.way2saTheme;
+      if (v === 'dark' || v === 'light') { hint = v; apply(); }
+    });
+  } catch (e) { /* opaque-origin sandbox: fall back to the CSS media query */ }
+})();
+</script>
+</body>
+</html>

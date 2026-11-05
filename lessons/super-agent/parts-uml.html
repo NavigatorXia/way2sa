@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parts / Repositories UML · dsh-superagent-prototype</title>
+<style>
+:root{
+  --bg:#f5f6fb; --card:#ffffff; --card2:#fafbff; --ink:#101830; --ink2:#2a3350;
+  --muted:#5f6980; --line:#dfe2ec; --accent:#4a55e8; --accent-soft:#eef0ff;
+  --blue:#185fa5; --blue-soft:#e6f1fb; --green:#0f6e56; --green-soft:#e1f5ee;
+  --amber:#8a5a06; --amber-soft:#fbf2dd;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+html[data-theme="dark"]{
+  --bg:#10121b; --card:#171a26; --card2:#1c2030; --ink:#eef1fb; --ink2:#c9d0e6;
+  --muted:#98a1bb; --line:#2b3042; --accent:#8b93ff; --accent-soft:#1f2440;
+  --blue:#85b7eb; --blue-soft:#152438; --green:#5dcaa5; --green-soft:#123027;
+  --amber:#e8bd6d; --amber-soft:#31260f;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:28px 20px 60px;background:var(--bg);color:var(--ink);font:14px/1.65 var(--sans)}
+.wrap{max-width:1180px;margin:0 auto}
+header.top{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:24px}
+h1{font-size:30px;letter-spacing:-.025em;margin:0 0 6px;font-weight:700}
+.sub{color:var(--muted);font-size:13.5px;margin:0}
+.sub code{font:12.5px var(--mono);background:var(--card2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.note{margin:14px 0 0;font-size:12.5px;color:var(--muted);border-left:3px solid var(--accent);padding-left:12px}
+.cross{margin:10px 0 0;font-size:12.5px}
+.cross a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent)}
+h2{font-size:20px;margin:36px 0 6px;letter-spacing:-.015em}
+h2 .n{display:inline-grid;place-items:center;width:24px;height:22px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font:600 12px var(--mono);margin-right:8px;vertical-align:2px}
+.lead{color:var(--muted);font-size:13px;margin:0 0 18px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 22px;font-size:12px;color:var(--muted)}
+.legend b{color:var(--ink2);font-weight:600}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:16px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.card>h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--card2);font-weight:600}
+.card .body{padding:12px 14px}
+ul.clean{list-style:none;margin:0;padding:0}
+ul.clean li{font:12.5px/1.75 var(--mono);color:var(--ink2);padding:2px 0;border-bottom:1px dashed var(--line)}
+ul.clean li:last-child{border-bottom:0}
+ul.clean li .k{color:var(--accent)}
+ul.clean li .src{color:var(--muted);float:right;font-size:11.5px}
+.uml{border:1.5px solid var(--accent);border-radius:12px;overflow:hidden;background:var(--card)}
+.uml .head{background:var(--accent-soft);padding:12px 16px;border-bottom:1.5px solid var(--accent)}
+.uml .stereo{font:11.5px var(--mono);color:var(--accent);letter-spacing:.04em}
+.uml .head h3{margin:2px 0 0;font-size:22px;letter-spacing:-.02em;font-weight:700}
+.uml .head .at{font:11.5px var(--mono);color:var(--muted)}
+.uml .comp{border-top:1px solid var(--line);padding:10px 16px 12px}
+.uml .comp:first-of-type{border-top:0}
+.uml .comp h4{margin:0 0 6px;font:600 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.uml .grp{margin:8px 0 3px;font:600 11px var(--mono);color:var(--accent)}
+.uml .line{font:12px/1.62 var(--mono);color:var(--ink2);white-space:pre-wrap;word-break:break-word}
+.uml .line .p{color:var(--green)}
+.uml .line .q{color:var(--muted)}
+.uml.blue{border-color:var(--blue)}
+.uml.blue .head{background:var(--blue-soft);border-bottom-color:var(--blue)}
+.uml.blue .stereo,.uml.blue .grp{color:var(--blue)}
+.uml.green{border-color:var(--green)}
+.uml.green .head{background:var(--green-soft);border-bottom-color:var(--green)}
+.uml.green .stereo,.uml.green .grp{color:var(--green)}
+.uml.mini .head{padding:9px 12px}
+.uml.mini .head h3{font-size:16px}
+.uml.mini .comp{padding:8px 12px 10px}
+.uml.mini .line{font-size:11.5px;line-height:1.55}
+.inh-base{max-width:430px;margin:0 auto}
+.inh-stem{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0;color:var(--muted);font:11.5px var(--mono)}
+.inh-stem:before,.inh-stem:after{content:"";height:1px;flex:1;background:var(--line)}
+.inh-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.pbox{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:10px;padding:10px 6px;text-align:center;min-width:0}
+.pbox b{display:block;font:600 13px var(--sans);color:var(--ink);word-break:break-word}
+.pbox span{display:block;font:11px var(--mono);color:var(--muted);margin-top:3px}
+.pbox em{display:block;font:11px var(--mono);color:var(--blue);font-style:normal;margin-top:5px;word-break:break-word}
+.strip4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0 0}
+.chip4{background:var(--blue-soft);border:1px solid var(--blue);border-radius:8px;padding:9px 10px;min-width:0}
+.chip4 b{display:block;font:600 12.5px var(--mono);color:var(--blue)}
+.chip4 span{display:block;font:11px/1.6 var(--mono);color:var(--ink2);margin-top:4px;word-break:break-word}
+.parts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--card2);font:600 11px var(--mono);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+tr:last-child td{border-bottom:0}
+td code{font:12px var(--mono);color:var(--ink2)}
+td .src{font:11.5px var(--mono);color:var(--muted)}
+pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;font:12px/1.7 var(--mono);color:var(--ink2)}
+.kbd{font:11.5px var(--mono);background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:1px 5px}
+.tag{display:inline-block;font:11px var(--mono);border-radius:4px;padding:1px 6px;background:var(--amber-soft);color:var(--amber)}
+footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+footer a{color:var(--accent);text-decoration:none}
+@media (max-width:900px){.grid,.parts{grid-template-columns:1fr}.inh-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.strip4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>Parts / Repositories UML</h1>
+  <p class="sub">dsh-superagent-prototype · <code>src/core/part.ts:24</code> · <code>src/core/ports.ts:106</code> · <code>src/core/engine.ts:31-38</code></p>
+  <p class="note">补上 <code>Engine</code> 内部的 5 个 <code>EnginePart</code> 子类与唯一状态出口 <code>Repositories</code>。它们共享同一个 <code>EngineOptions</code> 与同一个 <code>repo</code>，全部在 Engine 打开的单一事务里工作；本页自包含，可离线打开。</p>
+  <p class="cross">组合根与事务门见 <a href="engine-runtime-uml.html">Engine / Runtime UML</a> · 可编辑 Mermaid / PlantUML 版见 <a href="PARTS-UML.md">PARTS-UML.md</a>。</p>
+</header>
+
+<div class="legend">
+  <span><b>实线空心三角</b> 继承 / 泛化</span>
+  <span><b>虚线空心三角</b> 实现接口</span>
+  <span><b>实心菱形</b> 组合（同生命周期）</span>
+  <span><b>虚线箭头</b> 依赖</span>
+  <span><b>+ / - / #</b> public / private / protected</span>
+  <span><b>数字</b> public / private 方法数</span>
+</div>
+
+<h2><span class="n">1</span>五个 Part 与共享基类</h2>
+<p class="lead"><code>EnginePart</code> 没有抽象方法：它不是模板方法基类，而是 13 个 <code>protected</code> 读写辅助 + 2 个字段的工具箱。5 个子类的 public API 完全不同。</p>
+<div class="inh">
+  <div class="uml inh-base">
+    <div class="head">
+      <div class="stereo">«abstract» · src/core/part.ts</div>
+      <h3>EnginePart</h3>
+      <div class="at">part.ts:24 · constructor(options: EngineOptions) :26</div>
+    </div>
+    <div class="comp">
+      <h4>attributes · protected readonly</h4>
+      <div class="line"># repo : Repositories            <span class="q">:25</span></div>
+      <div class="line"># options : EngineOptions        <span class="q">:26 · 类型定义 :7-18</span></div>
+    </div>
+    <div class="comp">
+      <h4>operations · 13 protected</h4>
+      <div class="line"># now() : string                 <span class="q">:27</span></div>
+      <div class="line"># policy() : Policy              <span class="q">:28</span></div>
+      <div class="line"># owners(trigger) : string[]     <span class="q">:30</span></div>
+      <div class="line"># leftToWorkers(trigger) : void  <span class="q">:32</span></div>
+      <div class="line"># handBack(id, trigger, reason) : boolean <span class="q">:42</span></div>
+      <div class="line"># takeUp(id, triggerId) : void   <span class="q">:50</span></div>
+      <div class="line"># queueForEval(trigger) : boolean <span class="q">:57</span></div>
+      <div class="line"># emit(type, data) : void        <span class="q">:64</span></div>
+      <div class="line"># require(ticketId) : Ticket     <span class="q">:67</span></div>
+      <div class="line"># thread(ref) : Thread           <span class="q">:69</span></div>
+      <div class="line"># ticketsOnThread(thread) : Ticket[] <span class="q">:73</span></div>
+      <div class="line"># source(ticket) : Trigger | undefined <span class="q">:76</span></div>
+      <div class="line"># reaches(ticket, trigger) : boolean <span class="q">:77</span></div>
+    </div>
+  </div>
+  <div class="inh-stem">extends × 5</div>
+  <div class="inh-grid">
+    <div class="pbox"><b>Intake</b><span>1 / 0 · intake.ts:16</span><em>→ Tickets</em></div>
+    <div class="pbox"><b>Evals</b><span>11 / 12 · evals.ts:27</span><em>→ Tickets</em></div>
+    <div class="pbox"><b>Tickets</b><span>18 / 10 · tickets.ts:29</span><em>→ Replies</em></div>
+    <div class="pbox"><b>Assignments</b><span>7 / 1 · assignments.ts:30</span><em>→ Tickets + Replies</em></div>
+    <div class="pbox"><b>Replies</b><span>3 / 3 · replies.ts:26</span><em>→ Outbox（无构造器）</em></div>
+  </div>
+</div>
+
+<h2><span class="n">2</span>Repositories 端口与两个实现</h2>
+<p class="lead">不是类，是 <code>ports.ts:106</code> 的接口：1 个 <code>atomic()</code> + 4 组<b>内联对象类型</b>的同步仓储 = 17 个方法。类注释（<code>:105</code>）写明「每个方法都是同步的，这样 <code>atomic</code> 才能包住一个 unit of work」。</p>
+<div class="grid">
+  <div class="uml blue">
+    <div class="head">
+      <div class="stereo">«interface» · 唯一持久化出口 · src/core/ports.ts</div>
+      <h3>Repositories</h3>
+      <div class="at">ports.ts:106-134 · 17 个方法 · 全部同步</div>
+    </div>
+    <div class="comp">
+      <h4>transaction gate</h4>
+      <div class="line"><span class="p">+ atomic&lt;T&gt;(work: () =&gt; T): T</span>  <span class="q">:107</span></div>
+    </div>
+    <div class="comp">
+      <h4>attributes · 4 组内联对象 <span class="tag">非具名类型</span></h4>
+      <div class="line">+ triggers  : { get, save, disposition, saveDisposition }   <span class="q">:108-113</span></div>
+      <div class="line">+ threads   : { get, save, list, active }                    <span class="q">:114-120</span></div>
+      <div class="line">+ tickets   : { get, save, list, open, active }              <span class="q">:121-128</span></div>
+      <div class="line">+ decisions : { get, save, byThread }                        <span class="q">:129-133</span></div>
+    </div>
+    <div class="comp">
+      <h4>组合语义</h4>
+      <div class="line">实心菱形在 Repositories 一侧：4 组仓储随接口实例一起存在，</div>
+      <div class="line">在实现里都是 <code>readonly</code> 对象字面量（store.ts:201/210/233/243）。</div>
+    </div>
+  </div>
+  <div class="stack">
+    <div class="card">
+      <h3>«implements» · 生产</h3>
+      <div class="body">
+        <div class="line" style="font:12px/1.7 var(--mono);color:var(--ink2)">class Store implements Repositories</div>
+        <ul class="clean" style="margin-top:8px">
+          <li><span class="k">定义</span> src/app/store.ts:51 <span class="src">SQLite</span></li>
+          <li><span class="k">atomic</span> :140-153 <span class="src">SAVEPOINT 可嵌套</span></li>
+          <li><span class="k">afterCommit</span> :159 <span class="src">最外层提交后</span></li>
+          <li><span class="k">建库</span> runtime.ts:98 <span class="src">orchestrator.sqlite</span></li>
+          <li><span class="k">注入</span> runtime.ts:137 <span class="src">repo: store</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <h3>«implements» · 测试 / 临时实例</h3>
+      <div class="body">
+        <div class="line" style="font:12px/1.7 var(--mono);color:var(--ink2)">class MemoryRepositories implements Repositories</div>
+        <ul class="clean" style="margin-top:8px">
+          <li><span class="k">定义</span> src/core/memory.ts:10 <span class="src">5 个 Map</span></li>
+          <li><span class="k">atomic</span> :16-24 <span class="src">快照 + 回填</span></li>
+          <li><span class="k">clone</span> :5 <span class="src">structuredClone</span></li>
+          <li><span class="k">排序</span> :40-41 <span class="src">对齐 rowid DESC</span></li>
+        </ul>
+        <p style="font-size:12px;color:var(--muted);margin:8px 0 0">类注释 :6-9 明确写了「匹配 SQLite Store 的排序语义，供 Engine 测试」——核心不依赖 DB 不只是接口隔离，连行为都对齐了。</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="strip4">
+  <div class="chip4"><b>triggers · 4</b><span>get / save / disposition / saveDisposition<br>ports.ts:108-113</span></div>
+  <div class="chip4"><b>threads · 4</b><span>get / save / list / active<br>ports.ts:114-120</span></div>
+  <div class="chip4"><b>tickets · 5</b><span>get / save / list / open / active<br>ports.ts:121-128</span></div>
+  <div class="chip4"><b>decisions · 3</b><span>get / save / byThread<br>ports.ts:129-133</span></div>
+</div>
+
+<h2><span class="n">3</span>六者成员清单</h2>
+<p class="lead">以下是逐类全量成员（<code>+</code> public / <code>-</code> private），行号为当前工作树坐标。精确签名与返回类型见 <a href="PARTS-UML.md" style="color:var(--accent)">PARTS-UML.md 第 4 节</a>。</p>
+<div class="parts">
+
+  <div class="uml mini">
+    <div class="head"><div class="stereo">«class» extends EnginePart</div><h3>Intake</h3><div class="at">intake.ts:16 · ctor(options, tickets: Tickets) :17 · 1 / 0</div></div>
+    <div class="comp">
+      <h4>+ public</h4>
+      <div class="line">+ receive(received: Trigger): ReceiveResult   <span class="q">:19</span></div>
+      <div class="grp">类型</div>
+      <div class="line">ReceiveResult = 'stored' | 'duplicate' | 'filtered'  <span class="q">:8</span></div>
+      <div class="grp">流程 :20-61</div>
+      <div class="line">ISO 归一 → 去重 → scope.scope(:25) → 线程关联</div>
+      <div class="line">→ tickets.addInput(:50) → saveDisposition(:55)</div>
+      <div class="line">→ queueForEval(:58) → tickets.wake(:59)</div>
+      <div class="line">→ emit('trigger.received')(:60)</div>
+    </div>
+  </div>
+
+  <div class="uml mini">
+    <div class="head"><div class="stereo">«class» extends EnginePart</div><h3>Evals</h3><div class="at">evals.ts:27 · ctor(options, tickets: Tickets) :28 · 11 / 12</div></div>
+    <div class="comp">
+      <h4>+ public (11)</h4>
+      <div class="line">+ due(thread, policy) :35          + delivered(id, policy) :48</div>
+      <div class="line">+ start(threadKey, policy) :71     + candidate(triggerId) :121</div>
+      <div class="line">+ decide(triggerId, outcome) :131  + reevaluate(triggerId) :161</div>
+      <div class="line">+ handback(ticketId, triggerId, reason) :183</div>
+      <div class="line">+ dismiss(decisionId) :193         + withdraw(trigger) :201</div>
+      <div class="line">+ routed(triggerId, ticketId) :211 + policyChanged(from, to) :218</div>
+      <div class="grp">- private (12)</div>
+      <div class="line">- expire :60 · requeue :167 · reassess :223 · holding :232</div>
+      <div class="line">- candidateOf :237 · ignore :247 · accepted :258</div>
+      <div class="line">- directEval :271 · decideEval :282 · accept :306</div>
+      <div class="line">- finish :318 · record :327</div>
+      <div class="grp">端口 / 委派</div>
+      <div class="line">assessor.request :118 · release :68,324</div>
+      <div class="line">tickets.create :314 · tickets.end :300</div>
+    </div>
+  </div>
+
+  <div class="uml mini">
+    <div class="head"><div class="stereo">«class» extends EnginePart · 最大</div><h3>Tickets</h3><div class="at">tickets.ts:29 · ctor(options, replies: Replies) :30 · 18 / 10</div></div>
+    <div class="comp">
+      <h4>+ public (18)</h4>
+      <div class="line">+ create(...) :37 · bind :61 · threadClosed :77</div>
+      <div class="line">+ followsDone :95 · attachable :106 · attach :121</div>
+      <div class="line">+ requestStatus :150 · stop :160 · retry :168</div>
+      <div class="line">+ markUnrelated :185 · policyChanged :200</div>
+      <div class="line">+ dropSubscriptions :214 · addInput :234 · wake :252</div>
+      <div class="line">+ restart :318 · end :345 · note :395</div>
+      <div class="line">+ followForContext :407</div>
+      <div class="grp">- private (10)</div>
+      <div class="line">- triggersOf :272 · takenUp :280 · untaken :285</div>
+      <div class="line">- letGo :294 · refuse :311 · requeueUntaken :333</div>
+      <div class="line">- unfinished :370 · newAssignment :381</div>
+      <div class="line">- endAssignment :387 · subscribe :417</div>
+      <div class="grp">端口 / 委派</div>
+      <div class="line">replies.acknowledgeAccepted :53</div>
+      <div class="line">executor.start :54,178,244,268,326 · deliver :243 · stop :177,362</div>
+      <div class="line">automatic(input) 自由函数 :14（Assignments 复用）</div>
+    </div>
+  </div>
+
+  <div class="uml mini">
+    <div class="head"><div class="stereo">«class» extends EnginePart</div><h3>Assignments</h3><div class="at">assignments.ts:30 · ctor(options, tickets, replies) :31 · 7 / 1</div></div>
+    <div class="comp">
+      <h4>+ public (7)</h4>
+      <div class="line">+ started(ticketId, assignmentId) :34</div>
+      <div class="line">+ delivered(ticketId, assignmentId, inputIds) :48</div>
+      <div class="line">+ read(ticketId, inputIds) :60</div>
+      <div class="line">+ turnEnded(ticketId, assignmentId) :66</div>
+      <div class="line">+ deliveryFailed(ticketId, assignmentId, error) :72</div>
+      <div class="line">+ interrupted(ticketId, assignmentId) :83</div>
+      <div class="line">+ report(ticketId, report: WorkerReport): Ticket :99</div>
+      <div class="grp">- private (1) / 类型</div>
+      <div class="line">- running(ticketId, assignmentId) :136</div>
+      <div class="line">interface WorkerReport :11-20 · RECOVERY_NOTE :21</div>
+      <div class="grp">委派</div>
+      <div class="line">tickets.restart :90 · followsDone :129,131 · end :132</div>
+      <div class="line">replies.withdrawAttention :121 · executor.deliver :41,91</div>
+    </div>
+  </div>
+
+  <div class="uml mini green">
+    <div class="head"><div class="stereo">«class» extends EnginePart · 依赖叶子</div><h3>Replies</h3><div class="at">replies.ts:26 · 继承 EnginePart(options)，无自己的构造器 · 3 / 3</div></div>
+    <div class="comp">
+      <h4>+ public (3)</h4>
+      <div class="line">+ reply(request: ReplyRequest): Reply :36</div>
+      <div class="line">+ acknowledgeAccepted(ticketId, trigger, text) :43</div>
+      <div class="line">+ withdrawAttention(attentionId) :47</div>
+      <div class="grp">- private (3)</div>
+      <div class="line">- acknowledge(request) :48 · answer(request) :64</div>
+      <div class="line">- sourceChannel(ticket): ChannelRef | undefined :94</div>
+      <div class="grp">类型 / 端口</div>
+      <div class="line">type ReplyRequest :14 · interface Reply :18</div>
+      <div class="line">outbox.send :44,60,86 · status :57,62,80,91 · withdraw :47</div>
+      <div class="line">幂等 = 确定性 id (key) + outbox.status 判定，见类注释 :20-24</div>
+    </div>
+  </div>
+
+  <div class="uml mini blue">
+    <div class="head"><div class="stereo">«interface» · 状态出口</div><h3>Repositories</h3><div class="at">ports.ts:106 · 17 个方法 · 全部同步</div></div>
+    <div class="comp">
+      <h4>+ 事务门</h4>
+      <div class="line">+ atomic&lt;T&gt;(work: () =&gt; T): T :107</div>
+      <div class="grp">+ triggers (4) :108-113</div>
+      <div class="line">get(id) · save(trigger) · disposition(id) · saveDisposition(id, value)</div>
+      <div class="grp">+ threads (4) :114-120</div>
+      <div class="line">get(key) · save(thread) · list() · active()</div>
+      <div class="grp">+ tickets (5) :121-128</div>
+      <div class="line">get(id) · save(ticket) · list() · open() · active()</div>
+      <div class="grp">+ decisions (3) :129-133</div>
+      <div class="line">get(id) · save(decision) · byThread(key)</div>
+      <div class="grp">实现</div>
+      <div class="line">Store (app/store.ts:51) · MemoryRepositories (core/memory.ts:10)</div>
+    </div>
+  </div>
+
+</div>
+
+<h2><span class="n">4</span>装配证据 · 构造顺序即依赖拓扑序</h2>
+<pre>// src/core/engine.ts:31-38
+this.replies     = new Replies(options)                                 <span style="color:var(--muted)">// :33 叶子</span>
+this.tickets     = new Tickets(options, this.replies)                   <span style="color:var(--muted)">// :34</span>
+this.assignments = new Assignments(options, this.tickets, this.replies) <span style="color:var(--muted)">// :35</span>
+this.evals       = new Evals(options, this.tickets)                      <span style="color:var(--muted)">// :36</span>
+this.intake      = new Intake(options, this.tickets)                     <span style="color:var(--muted)">// :37</span>
+
+// src/app/runtime.ts:98 / :137
+const store = opened = this.store = new Store(join(machine.stateDir, 'orchestrator.sqlite'), report)
+const engine = this.engine = new Engine({ repo: store, scope: sources, policy, assessor, executor, ... })</pre>
+<p class="lead" style="margin-top:10px">依赖是 <b>DAG，无环</b>：<code>Intake / Evals / Assignments → Tickets → Replies → Outbox</code>；<code>Replies</code> 不回指任何兄弟 Part。</p>
+
+<h2><span class="n">5</span>跨 Part 调用矩阵</h2>
+<table>
+  <thead><tr><th>调用方</th><th>被调方</th><th>方法</th><th>证据</th></tr></thead>
+  <tbody>
+    <tr><td><code>Intake</code></td><td><code>Tickets</code></td><td>addInput / wake</td><td class="src">intake.ts:50, :59</td></tr>
+    <tr><td><code>Intake</code></td><td><code>SourceScope</code></td><td>scope</td><td class="src">intake.ts:25</td></tr>
+    <tr><td><code>Evals</code></td><td><code>Tickets</code></td><td>create / end</td><td class="src">evals.ts:314, :300</td></tr>
+    <tr><td><code>Evals</code></td><td><code>Assessor</code></td><td>request / release</td><td class="src">evals.ts:118, :68, :324</td></tr>
+    <tr><td><code>Tickets</code></td><td><code>Replies</code></td><td>acknowledgeAccepted</td><td class="src">tickets.ts:53</td></tr>
+    <tr><td><code>Tickets</code></td><td><code>Executor</code></td><td>start / deliver / stop</td><td class="src">tickets.ts:54,178,244,268,326 / :243 / :177,362</td></tr>
+    <tr><td><code>Assignments</code></td><td><code>Tickets</code></td><td>restart / followsDone / end</td><td class="src">assignments.ts:90 / :129,131 / :132</td></tr>
+    <tr><td><code>Assignments</code></td><td><code>Replies</code></td><td>withdrawAttention</td><td class="src">assignments.ts:121</td></tr>
+    <tr><td><code>Replies</code></td><td><code>Outbox</code></td><td>send / status / withdraw</td><td class="src">replies.ts:44,60,86 / :57,62,80,91 / :47</td></tr>
+    <tr><td>全部 5 个 Part</td><td><code>Repositories</code></td><td>triggers / threads / tickets / decisions</td><td class="src">part.ts:25 的 this.repo</td></tr>
+  </tbody>
+</table>
+
+<h2><span class="n">6</span>读图要点</h2>
+<table>
+  <thead><tr><th>#</th><th>结论</th><th>依据</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>五个 Part 是<b>同一事务内的分工</b>，不是五个服务：共享同一份 <code>EngineOptions</code> 与同一个 <code>repo</code></td><td class="src">engine.ts:31-38</td></tr>
+    <tr><td>2</td><td><b>唯一事务门在 Engine</b>：27 个 public 方法中 26 个是 <code>repo.atomic(() ⇒ part.…())</code>，例外是只读 <code>candidate()</code>；Part 自己从不开启事务</td><td class="src">engine.ts:48 起、:90</td></tr>
+    <tr><td>3</td><td>基类是工具箱不是模板方法：无抽象方法，子类 public API 数量 1 / 11 / 18 / 7 / 3</td><td class="src">part.ts:24-79</td></tr>
+    <tr><td>4</td><td><b>跨聚合写必须委托兄弟 Part</b>：Ticket 聚合只有一个写者，靠代码结构而非运行时检查保证</td><td class="src">part.ts:20-23 注释 · evals.ts:300,314</td></tr>
+    <tr><td>5</td><td>副作用只排队不进核心：<code>Executor</code> / <code>Assessor</code> / <code>Outbox</code> 都只排队，领域事件经 <code>options.emit</code> 交给 Runtime</td><td class="src">ports.ts:55-58, :75-83 · part.ts:64-66</td></tr>
+    <tr><td>6</td><td>两个仓储实现<b>语义等价</b>：内存版刻意复制 SQLite 排序；<code>Store.atomic</code> 的 SAVEPOINT 嵌套只是额外保险</td><td class="src">memory.ts:6-9, :40-41 · store.ts:140-153</td></tr>
+    <tr><td>7</td><td><code>active()</code>/<code>open()</code> 是给轮询用的工作集：SQLite 用生成列 + 部分索引，内存版用 filter</td><td class="src">store.ts:30-43, :214, :241 · memory.ts:35, :43</td></tr>
+    <tr><td>8</td><td>与课件 <code>assets/uml.js</code> 的关系：那里是精简弹窗条目，本页是完整版；改目录后需 <span class="kbd">node tools/build.mjs</span> 重建</td><td class="src">assets/uml.js</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  Parts / Repositories UML · 源码基准 <code>dsh-superagent-prototype</code> · 完整可编辑 Mermaid / PlantUML 版见同目录 <a href="PARTS-UML.md">PARTS-UML.md</a> · 组合根见 <a href="engine-runtime-uml.html">engine-runtime-uml.html</a> · 主题跟随宿主 Appearance，宿主未发布时跟随系统。
+  <br><span style="color:var(--muted)">注：Shan 预览用 <code>srcdoc</code> 沙箱，上面的相对链接在那里不可跳转；请从同目录直接打开另一份文件（<code>file://</code> 下正常）。</span>
+</footer>
+</div>
+<script>
+(function () {
+  try {
+    var hint = window.__SHAN_THEME__ || window.WAY2SA_PARENT_THEME;
+    var q = window.matchMedia('(prefers-color-scheme: dark)');
+    function apply() {
+      var t = (hint === 'dark' || hint === 'light') ? hint : (q.matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+      document.documentElement.style.colorScheme = t;
+    }
+    apply();
+    if (q.addEventListener) q.addEventListener('change', apply);
+    window.addEventListener('message', function (e) {
+      var d = e.data;
+      if (!d) return;
+      var v = d.shanTheme || d.way2saTheme;
+      if (v === 'dark' || v === 'light') { hint = v; apply(); }
+    });
+  } catch (e) { /* opaque-origin sandbox: fall back to the CSS media query */ }
+})();
+</script>
+</body>
+</html>
