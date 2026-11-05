@@ -44,7 +44,7 @@ Shan 的 `content-view` 把 HTML 文件渲染成：
 
 因此每个 `index.html` 都是零外链的单文件文档，8 课数据、8 份 README、8 份 TUTORIAL、8 篇原型原文、UML 目录全部内联，`file://` 双击与 Shan 预览用同一个文件。`sa-lessons/diagrams.html` 处理的是同一个问题。
 
-单文件现为 **577.6 KB**，超过 `TEXT_PREVIEW_MAX_BYTES = 256 KB` 的首块。这不是失败：Shan 对截断的 HTML 走另一条已实现的路径 —— `file-viewer.tsx` 里 `needsHtmlFull` 会用 `/api/files?type=download` 再取一次完整文件（上限 `HTML_PREVIEW_MAX_BYTES = 10 MB`），仍然渲染成同一个 `srcdoc`。代价只是预览多一次请求；`file://` 不受影响。参照物 `sa-lessons/diagrams.html` 本身就是 **790 KB**、走同一条路径且能正常预览，所以这条路径是验证过的。校验器只把 10 MB 当硬上限。
+单文件现为 **585.8 KB**（`node tools/validate.mjs` 末行会打印当前最大值），超过 `TEXT_PREVIEW_MAX_BYTES = 256 KB` 的首块。这不是失败：Shan 对截断的 HTML 走另一条已实现的路径 —— `file-viewer.tsx` 里 `needsHtmlFull` 会用 `/api/files?type=download` 再取一次完整文件（上限 `HTML_PREVIEW_MAX_BYTES = 10 MB`），仍然渲染成同一个 `srcdoc`。代价只是预览多一次请求；`file://` 不受影响。参照物 `sa-lessons/diagrams.html` 本身就是 **790 KB**、走同一条路径且能正常预览，所以这条路径是验证过的。校验器只把 10 MB 当硬上限。
 
 ## 主题桥接：Shan 侧的唯一改动
 
